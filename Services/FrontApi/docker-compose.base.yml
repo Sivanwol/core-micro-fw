@@ -1,0 +1,81 @@
+version: "3.3"
+
+services:
+  front-api-service:
+    container_name: front-api-container
+    build:
+      context: .
+      dockerfile: frontApi.Dockerfile
+    image: front-api-service
+    environment:
+      - ASPNETCORE_URLS=http://bk-container:3000
+    restart: always
+    network_mode: bridge
+    ports:
+      - "3000:3000"
+    volumes:
+      - ~/.aspnet/https:/https:ro
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - rabbitmq_net
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: boilde_fw
+    ports:
+      - "5432:5432"
+    network_mode: bridge
+    user: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - ${REDIS_PORT}:6379
+    network_mode: bridge
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  elasticsearch:
+    container_name: es-container
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    environment:
+      - node.name=es-node
+      - cluster.name=es-cluster
+      - discovery.type=single-node
+    networks:
+      - es_container_network
+    volumes:
+      - local_es:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+volumes:
+  pgdata:
+    driver: local
+  front_api_data:
+    driver: local
+
+networks:
+  rabbitmq_net:
+    driver: bridge

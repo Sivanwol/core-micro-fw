@@ -1,0 +1,32 @@
+{
+  "name": "storage_project",
+  "version": "0.0.0",
+  "description": "platform for storage startup",
+  "author": "Sivan Wolberg <Wolberg Pro>",
+  "homepage": "https://www.wolberg.pro",
+  "private": true,
+  "license": "private",
+  "scripts": {
+    "commit": "cz",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^16.2.3",
+    "@commitlint/config-angular": "^16.2.3",
+    "@commitlint/config-conventional": "^16.2.1",
+    "husky": "^7.0.4",
+    "lint-staged": "^12.3.8"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "engines": {
+    "node": ">=v14",
+    "npm": ">=9",
+    "yarn": "please use npm instead of yarn",
+    "pnpm": "please use npm instead of pnpm"
+  }
+}
