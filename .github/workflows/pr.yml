@@ -1,0 +1,98 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: PR CI
+
+on:
+  pull_request:
+    branches: ["main", "develop", "stating", "production"]
+  workflow_dispatch:
+
+jobs:
+  Run-CI:
+    runs-on: ubuntu-latest
+    name: CI Runner
+    needs: [dashboard-backend, test-CI, frontend-platforms]
+    steps:
+      - name: Run CI
+        run: |
+          echo "CI is running"
+  dotnet-setup:
+    runs-on: ubuntu-latest
+    name: Setup .NET
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0.x
+  dashboard-backend:
+    runs-on: ubuntu-latest
+    name: Dashboard Backend Validation & Build
+    needs: [dotnet-setup]
+    strategy:
+      matrix:
+        projectPaths:
+          - "Service-Tests"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      # build and compile
+      - name: Restore dependencies on dashboard backend
+        run: cd ${{ github.workspace }}/backend/Dashboard-backend && dotnet restore
+      - name: Build on dashboard backend
+        run: cd ${{ github.workspace }}/backend/Dashboard-backend && dotnet build --no-restore
+  test-CI:
+    runs-on: ubuntu-latest
+    name: Test Runner
+    needs: [dotnet-setup]
+    strategy:
+      matrix:
+        projectPaths:
+          - "Service-Tests"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      # service tests
+      - name: Run Tests
+        run: |
+          for path in ${{ join( matrix.projectPaths , ' ')}} }}; do
+            echo "Tests Start for $path"
+            cd ${{ github.workspace }}/backend/$path && dotnet restore
+            cd ${{ github.workspace }}/backend/$path && dotnet build --no-restore
+            cd ${{ github.workspace }}/backend/$path && dotnet test --no-build --verbosity normal
+            echo "Tests Finished for $path"
+          done
+  node-setup:
+    runs-on: ubuntu-latest
+    name: Setup Node
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x, 20.x]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+  frontend-platforms:
+    name: Frontend Platforms Lint & Build
+    needs: [node-setup]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x, 20.x]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: nrwl/nx-set-shas@v3
+      - run: cd ${{ github.workspace }}/frontend && npm ci
+      - run: cd ${{ github.workspace }}/frontend && npx nx format:check
+      - run: cd ${{ github.workspace }}/frontend && npx nx affected -t lint --parallel=3
+      - run: cd ${{ github.workspace }}/frontend && npx nx affected -t test --parallel=3 --configuration=ci
+      - run: cd ${{ github.workspace }}/frontend && npx nx affected -t build --parallel=3
