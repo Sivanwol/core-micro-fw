@@ -2,35 +2,58 @@ version: "3.3"
 
 services:
   front-api-service:
+    container_name: front-api-container
+    build:
+      context: .
+      dockerfile: ./frontApi.Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - RabbitMqSettings:Host=rabbitmq
+      - ElasticApm:ServerUrls=http://elasticsearch:9200
+      - ElasticsearchSettings:Uri=http://elasticsearch:9200
       - DbConnection=Server=localhost;Port=${DB_PORT};Database=${POSTGRES_DB};User Id=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
     extends:
       file: docker-compose.base.yml
       service: front-api-service
     restart: always
+    ports:
+      - "8000:8000"
     volumes:
       - front-api-service:/usr/src/app/front_api_service
     depends_on:
+      - serviceDiscovery
       - db
       - redis
       - rabbitmq
       - elasticsearch
+    links:
+      - "serviceDiscovery"
+      - "rabbitmq"
+      - "elasticsearch"
   db:
+    hostname: system-db
     extends:
       file: docker-compose.base.yml
       service: db
+  serviceDiscovery:
+    hostname: service-discovery
+    extends:
+      file: docker-compose.base.yml
+      service: serviceDiscovery
   rabbitmq:
+    hostname: rabbitmq
     extends:
       file: docker-compose.base.yml
       service: rabbitmq
   redis:
+    hostname: redis
     extends:
       file: docker-compose.base.yml
       service: redis
     volumes:
       - redis_data:/var/lib/redis:/data
   elasticsearch:
+    hostname: elasticsearch
     extends:
       file: docker-compose.base.yml
       service: elasticsearch
@@ -38,11 +61,13 @@ services:
 volumes:
   pgdata:
     driver: local
+  local_es:
+    driver: local
   redis_data:
     driver: local
   front-api-service:
     driver: local
 
 networks:
-  rabbitmq_net:
+  gateway_network:
     driver: bridge

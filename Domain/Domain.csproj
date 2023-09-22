@@ -23,4 +23,9 @@
 
 
 
+    <ItemGroup>
+      <Folder Include="Migrations\sql\" />
+    </ItemGroup>
+
+
 </Project>

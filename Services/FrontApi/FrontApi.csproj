@@ -33,12 +33,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="..\..\LogicApi\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\..\Application\Application.csproj" />
       <ProjectReference Include="..\..\Domain\Domain.csproj" />
       <ProjectReference Include="..\..\Processor\Processor.csproj" />
@@ -46,6 +40,11 @@
 
     <ItemGroup>
       <Folder Include="Logs\FrontApi\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="docker-compose.dev.yml" />
+      <None Remove="Dockerfile" />
     </ItemGroup>
 
 </Project>

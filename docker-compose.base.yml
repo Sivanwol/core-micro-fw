@@ -9,13 +9,24 @@ services:
     image: front-api-service
     environment:
       - ASPNETCORE_URLS=http://bk-container:3000
+      - Eureka__Client__ServiceUrl=http://serviceDiscovery:8761/eureka/
+      - Eureka__Client__ShouldRegisterWithEureka=true
+      - Eureka__Client__ValidateCertificates=false
     restart: always
-    network_mode: bridge
+    networks:
+      - gateway_network
     ports:
-      - "3000:3000"
+      - "8000:8000"
     volumes:
       - ~/.aspnet/https:/https:ro
 
+  serviceDiscovery:
+    image: steeltoeoss/eureka-server
+    hostname: eureka-server
+    networks:
+      - gateway_network
+    ports:
+      - "8761:8761"
   rabbitmq:
     image: rabbitmq:management
     container_name: rabbitmq
@@ -26,7 +37,7 @@ services:
       - "5672:5672"
       - "15672:15672"
     networks:
-      - rabbitmq_net
+      - gateway_network
   db:
     image: postgres:15-alpine
     restart: always
@@ -36,7 +47,8 @@ services:
       POSTGRES_DB: boilde_fw
     ports:
       - "5432:5432"
-    network_mode: bridge
+    networks:
+      - gateway_network
     user: postgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -50,7 +62,8 @@ services:
     restart: always
     ports:
       - ${REDIS_PORT}:6379
-    network_mode: bridge
+    networks:
+      - gateway_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 1s
@@ -64,7 +77,7 @@ services:
       - cluster.name=es-cluster
       - discovery.type=single-node
     networks:
-      - es_container_network
+      - gateway_network
     volumes:
       - local_es:/usr/share/elasticsearch/data
     ports:
@@ -73,9 +86,11 @@ services:
 volumes:
   pgdata:
     driver: local
+  local_es:
+    driver: local
   front_api_data:
     driver: local
 
 networks:
-  rabbitmq_net:
+  gateway_network:
     driver: bridge
