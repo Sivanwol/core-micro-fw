@@ -13,19 +13,16 @@ public class IndexUserConsumerHandler: IConsumer<IndexUserEvent> {
 
     public async Task Consume(ConsumeContext<IndexUserEvent> context) {
         await _indexUser.CreateIndexAsync();
-        if (context.Message.User != null) {
-            
-            var user = context.Message.User;
-            await _indexUser.InsertAsync(new IndexUserRequest {
-                Auth0Id = user.Auth0Id
-            });
-        }
+        var user = context.Message.User;
+        await _indexUser.InsertAsync(new IndexUserRequest {
+            Auth0Id = user.Auth0Id
+        });
     }
 }
 
 public class IndexUserConsumerDefinition : ConsumerDefinition<IndexUserConsumerHandler> {
     protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator, IConsumerConfigurator<IndexUserConsumerHandler> consumerConfigurator)
     {
-        consumerConfigurator.UseRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(3)));
+        consumerConfigurator.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(3)));
     }
 }

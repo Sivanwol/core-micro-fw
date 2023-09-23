@@ -1,7 +1,5 @@
 using Application.Exceptions;
 using Application.Responses.Common;
-using Application.Utils;
-using AutoMapper;
 using Domain.Context;
 using MassTransit;
 using MediatR;
