@@ -9,10 +9,9 @@ RUN dotnet tool install --global dotnet-ef
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
 # copy csproj 
-RUN mkdir /src
+RUN mkdir -p /src
 WORKDIR /src
 
-RUN pwd
 COPY . ./Application/ 
 COPY . ./Domain/ 
 COPY . ./Processor/ 

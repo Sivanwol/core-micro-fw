@@ -25,9 +25,9 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 7.0.x
-  dashboard-backend:
+  front-api-service:
     runs-on: ubuntu-latest
-    name: Dashboard Backend Validation & Build
+    name: Front Api Validation & Build
     needs: [dotnet-setup]
     strategy:
       matrix:

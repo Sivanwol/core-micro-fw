@@ -1,9 +1,8 @@
 {
   "name": "storage_project",
-  "version": "0.0.0",
-  "description": "platform for storage startup",
-  "author": "Sivan Wolberg <Wolberg Pro>",
-  "homepage": "https://www.wolberg.pro",
+  "version": "1.0.0",
+  "description": "platform for  startups",
+  "author": "Sivan Wolberg <sivan@wolberg.proo>",
   "private": true,
   "license": "private",
   "scripts": {
@@ -11,7 +10,7 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@commitlint/cli": "^16.2.3",
+    "@commitlint/cli": "^17.7.1",
     "@commitlint/config-angular": "^16.2.3",
     "@commitlint/config-conventional": "^16.2.1",
     "husky": "^7.0.4",
