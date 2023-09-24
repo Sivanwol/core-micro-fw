@@ -39,10 +39,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Logs\FrontApi\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <None Remove="docker-compose.dev.yml" />
       <None Remove="Dockerfile" />
     </ItemGroup>

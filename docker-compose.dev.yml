@@ -5,41 +5,26 @@ services:
     container_name: front-api-container
     build:
       context: .
-      dockerfile: ./frontApi.Dockerfile
+      dockerfile: ./frontApi.dev.Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - RabbitMqSettings:Host=rabbitmq
       - ElasticApm:ServerUrls=http://elasticsearch:9200
       - ElasticsearchSettings:Uri=http://elasticsearch:9200
-      - DbConnection=Server=localhost;Port=${DB_PORT};Database=${POSTGRES_DB};User Id=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
+      - DbConnection="Host=host.docker.internal; Port=5432; Database=postgres; User Id=postgres; Password=postgres; Pooling=true; MinPoolSize=0; MaxPoolSize=100; Timeout=15; CommandTimeout=300; PersistSecurityInfo=True;"
     extends:
       file: docker-compose.base.yml
       service: front-api-service
-    restart: always
+    restart: unless-stopped
+    command: ["dotnet", "ef", "database update"]
     ports:
       - "8000:8000"
     volumes:
       - front-api-service:/usr/src/app/front_api_service
-    depends_on:
-      - serviceDiscovery
-      - db
-      - redis
-      - rabbitmq
-      - elasticsearch
-    links:
-      - "serviceDiscovery"
-      - "rabbitmq"
-      - "elasticsearch"
   db:
-    hostname: system-db
     extends:
       file: docker-compose.base.yml
       service: db
-  serviceDiscovery:
-    hostname: service-discovery
-    extends:
-      file: docker-compose.base.yml
-      service: serviceDiscovery
   rabbitmq:
     hostname: rabbitmq
     extends:

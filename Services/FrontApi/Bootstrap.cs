@@ -22,6 +22,7 @@ public class Bootstrap {
         Environment = env;
 
         Domain = $"https://{Configuration["Auth0:Domain"]}/";
+        Log.Information($"Connect to Db Domain: {configuration.GetConnectionString("DbConnection")}");
     }
 
     private static string Domain;
@@ -30,6 +31,7 @@ public class Bootstrap {
     public static IConfiguration Configuration { get; set; }
     
     public void ConfigureServices(IServiceCollection services) {
+        
         var useLocalRQ = Boolean.Parse(Configuration["ENABLE_SWAGGER"] ?? "false");
         Log.Information("Start Configure Server");
         services.AddGenericServiceExtension(Configuration, Domain, () => {

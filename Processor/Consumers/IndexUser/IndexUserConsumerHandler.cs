@@ -23,6 +23,6 @@ public class IndexUserConsumerHandler: IConsumer<IndexUserEvent> {
 public class IndexUserConsumerDefinition : ConsumerDefinition<IndexUserConsumerHandler> {
     protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator, IConsumerConfigurator<IndexUserConsumerHandler> consumerConfigurator)
     {
-        consumerConfigurator.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(3)));
+        //consumerConfigurator.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(3)));
     }
 }
