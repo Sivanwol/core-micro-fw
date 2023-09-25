@@ -16,7 +16,10 @@
     "prettier": "^3.0.3"
   },
   "engines": {
-    "node": ">=v18"
+    "node": ">=v18",
+    "npm": "please use yarn",
+    "yarn": ">=1.22.10",
+    "pnpm": "please use yarn"
   },
   "dependencies": {}
 }
