@@ -26,9 +26,9 @@ RUN cd Services/FrontApi && dotnet build "Services/FrontApi/FrontApi.csproj" -c 
 
 FROM build AS publish
 WORKDIR /src/Services/FrontApi
-RUN ls -ga .
 RUN cd Services/FrontApi && dotnet publish -c release -o /app/publish --no-restore
 
 FROM base AS final
 WORKDIR /app
-COPY --from=/publish /app/publish .
+RUN ls -ga .
+COPY --from=publish /app/publish .
