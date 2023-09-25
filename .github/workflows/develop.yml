@@ -146,21 +146,34 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Extract metadata (tags, labels) for Docker on dashboard backend
+      - name: Extract metadata (tags, labels) for Docker on front api
         id: backend-meta
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}_front_api
+          labels: |
+            maintainer=DockerBuilder
+            org.opencontainers.image.title=front-api-build
+            org.opencontainers.image.description=Front Api Build
+            org.opencontainers.image.vendor=wolberg-pro
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+      
       # build and compile
       - name: Restore dependencies
         run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet restore
       - name: Build
         run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet build --no-restore
+      - run: cd ${{ github.workspace }}/backend && ls -ga
       # build and push image
       - name: Build and push Docker image on dashboard backend
         uses: docker/build-push-action@v4
         with:
-          context: ./backend
+          context: ${{ github.workspace }}/backend
           file: frontApi.Dockerfile
           push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'}}
           tags: ${{ steps.backend-meta.outputs.tags }}
