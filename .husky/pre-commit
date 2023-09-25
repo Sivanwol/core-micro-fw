@@ -2,3 +2,4 @@
 . "$(dirname "$0")/_/husky.sh"
 
 npx pretty-quick --staged
+cd frontend && npx nx format:write --all &&  npx nx format:check --all
