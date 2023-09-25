@@ -17,11 +17,11 @@ COPY . ./backend/Domain/
 COPY . ./backend/Processor/ 
 COPY . ./backend/Services/FrontApi/ 
 # restore and build
-RUN cd Application && dotnet restore backend/Application/*.csproj
-RUN cd Domain && dotnet restore backend/Domain/*.csproj
-RUN cd Processor && dotnet restore backend/Processor/*.csproj
-RUN cd Services/FrontApi && dotnet restore backend/Services/FrontApi/*.csproj
-RUN cd Services/FrontApi && dotnet build "backend/Services/FrontApi/FrontApi.csproj" -c Release -o /app/build
+RUN cd backend/Application && dotnet restore Application/*.csproj
+RUN cd backend/Domain && dotnet restore Domain/*.csproj
+RUN cd backend/Processor && dotnet restore Processor/*.csproj
+RUN cd backend/Services/FrontApi && dotnet restore Services/FrontApi/*.csproj
+RUN cd backend/Services/FrontApi && dotnet build "Services/FrontApi/FrontApi.csproj" -c Release -o /app/build
 
 
 FROM build AS publish
