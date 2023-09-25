@@ -173,7 +173,7 @@ jobs:
       - name: Build and push Docker image on dashboard backend
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./backend
           file: backend/frontApi.CI.Dockerfile
           push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'}}
           tags: ${{ steps.backend-meta.outputs.tags }}
