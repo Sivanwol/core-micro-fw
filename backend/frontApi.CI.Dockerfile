@@ -22,7 +22,12 @@ RUN cd Domain && dotnet restore Domain/*.csproj
 RUN cd Processor && dotnet restore Processor/*.csproj
 RUN cd Services/FrontApi && dotnet restore Services/FrontApi/*.csproj
 RUN cd Services/FrontApi && dotnet build "Services/FrontApi/FrontApi.csproj" -c Release -o /app/build
-RUN cd Services/FrontApi && dotnet publish -c release -o /app/publish --no-restore
+
+
+FROM build AS publish
+WORKDIR /src/Services/FrontApi
+RUN ls -ga .
+RUN dotnet publish -c release -o /app/publish --no-restore
 
 FROM base AS final
 WORKDIR /app

@@ -168,7 +168,6 @@ jobs:
         run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet restore
       - name: Build
         run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet build --no-restore
-      - run: cd ${{ github.workspace }}/backend && ls -ga
       # build and push image
       - name: Build and push Docker image on Front Api
         uses: docker/build-push-action@v4
