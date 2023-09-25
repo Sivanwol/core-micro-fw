@@ -24,8 +24,8 @@
   ],
   "engines": {
     "node": ">=v18",
-    "npm": "please use yarn",
-    "yarn": ">=1.22.10",
-    "pnpm": "please use yarn"
+    "npm": ">=9",
+    "yarn": "please use npm",
+    "pnpm": "please use npm"
   }
 }
