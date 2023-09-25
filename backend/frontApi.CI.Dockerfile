@@ -31,4 +31,4 @@ RUN cd Services/FrontApi && dotnet publish -c release -o /app/publish --no-resto
 
 FROM base AS final
 WORKDIR /app
-COPY --from=Services/FrontApi/publish /app/publish .
+COPY --from=/publish /app/publish .
