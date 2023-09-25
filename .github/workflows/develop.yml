@@ -161,7 +161,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./backend
-          file: frontApi.Dockerfile
+          file: ${{ github.workspace }}/frontApi.Dockerfile
           push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'}}
           tags: ${{ steps.backend-meta.outputs.tags }}
           labels: ${{ steps.backend-meta.outputs.labels }}
