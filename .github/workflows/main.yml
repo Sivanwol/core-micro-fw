@@ -79,7 +79,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-          cache-dependency-path: ${{ github.workspace }}/frontend/yarn.lock
+          cache-dependency-path: ${{ github.workspace }}/frontend/package-lock.json
   frontend-platforms:
     name: Frontend Platforms Lint & Build
     needs: [node-setup]
