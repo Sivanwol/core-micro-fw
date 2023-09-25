@@ -26,7 +26,7 @@ RUN cd Services/FrontApi && dotnet build "Services/FrontApi/FrontApi.csproj" -c 
 
 FROM build AS publish
 WORKDIR /src/Services/FrontApi
-RUN dotnet publish -c release -o /app/publish --no-restore
+RUN cd Services/FrontApi && dotnet publish -c release -o /app/publish --no-restore
 
 FROM base AS final
 WORKDIR /app
