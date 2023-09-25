@@ -10,6 +10,7 @@ ENV PATH="${PATH}:/root/.dotnet/tools"
 
 # copy csproj 
 RUN mkdir -p /src
+RUN ls -ga .
 WORKDIR /src
 
 COPY . ./backend/Application/ 
