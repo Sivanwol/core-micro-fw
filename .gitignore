@@ -241,5 +241,3 @@ _Pvt_Extensions
 # Ignore DevSpace cache and log folder
 .devspace/
 
-yarn.lock
-pnpm-lock.yaml

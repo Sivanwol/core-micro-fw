@@ -23,9 +23,6 @@
     "not op_mini all"
   ],
   "engines": {
-    "node": ">=v14",
-    "npm": ">=9",
-    "yarn": "please use npm instead of yarn",
-    "pnpm": "please use npm instead of pnpm"
+    "node": ">=v18"
   }
 }

@@ -5,10 +5,9 @@
   },
   "tasksRunnerOptions": {
     "default": {
-      "runner": "nx-cloud",
+      "runner": "nx/tasks-runners/default",
       "options": {
-        "cacheableOperations": ["build", "lint", "test", "e2e"],
-        "accessToken": "ZjIzZDZiNDYtY2QwZi00NDE1LThiNzgtNzVlYjE4NjQ1OWE1fHJlYWQtd3JpdGU="
+        "cacheableOperations": ["build", "lint", "test", "e2e"]
       }
     }
   },
@@ -17,10 +16,10 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-    "test": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
-    },
     "e2e": {
+      "inputs": ["default", "^production"]
+    },
+    "test": {
       "inputs": ["default", "^production"]
     },
     "lint": {
@@ -38,12 +37,21 @@
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/jest.config.[jt]s",
-      "!{projectRoot}/src/test-setup.[jt]s",
-      "!{projectRoot}/test-setup.[jt]s",
       "!{projectRoot}/.eslintrc.json",
       "!{projectRoot}/eslint.config.js"
     ],
     "sharedGlobals": []
-  }
+  },
+  "generators": {
+    "@nxext/vue": {
+      "application": {
+        "linter": "eslint"
+      },
+      "component": {},
+      "library": {
+        "linter": "eslint"
+      }
+    }
+  },
+  "plugins": ["@nxext/vue"]
 }

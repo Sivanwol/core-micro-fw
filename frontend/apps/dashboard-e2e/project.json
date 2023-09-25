@@ -5,11 +5,11 @@
   "projectType": "application",
   "targets": {
     "e2e": {
-      "executor": "@nx/cypress:cypress",
+      "executor": "@mands/nx-playwright:playwright-executor",
       "options": {
-        "cypressConfig": "apps/dashboard-e2e/cypress.config.ts",
-        "devServerTarget": "dashboard:serve:development",
-        "testingType": "e2e"
+        "e2eFolder": "apps/dashboard-e2e",
+        "devServerTarget": "dashboard:serve",
+        "packageRunner": "pnpm"
       },
       "configurations": {
         "production": {
@@ -17,11 +17,21 @@
         }
       }
     },
+    "ts-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "tsc --build --force --verbose apps/dashboard-e2e/tsconfig.json"
+          }
+        ]
+      }
+    },
     "lint": {
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/dashboard-e2e/**/*.{js,ts}"]
+        "lintFilePatterns": ["apps/dashboard-e2e/**/*.{ts,tsx,js,jsx}"]
       }
     }
   },

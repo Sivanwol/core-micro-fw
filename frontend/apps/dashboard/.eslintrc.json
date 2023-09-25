@@ -1,18 +1,20 @@
 {
-  "extends": ["../../.eslintrc.json"],
+  "extends": [
+    "plugin:vue/vue3-essential",
+    "eslint:recommended",
+    "@vue/eslint-config-typescript",
+    "@vue/eslint-config-prettier/skip-formatting",
+    "../../.eslintrc.json"
+  ],
   "ignorePatterns": ["!**/*"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {
-        "jest/no-done-callback": "off"
-      }
+      "rules": {}
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {
-        "jest/no-done-callback": "off"
-      }
+      "rules": {}
     },
     {
       "files": ["*.js", "*.jsx"],

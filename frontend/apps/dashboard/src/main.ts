@@ -1,10 +1,11 @@
-import App from './App.svelte';
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router';
 
-const app = new App({
-  target: document.body,
-  props: {
-    name: 'dashboard',
-  },
-});
+import './assets/main.css';
 
-export default app;
+const app = createApp(App);
+
+app.use(router);
+
+app.mount('#app');
