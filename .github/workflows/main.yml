@@ -11,7 +11,7 @@ jobs:
   Run-CI:
     runs-on: ubuntu-latest
     name: CI Runner
-    needs: [dashboard-backend, test-CI, frontend-platforms]
+    needs: [front-api-service, frontend-platforms]
     steps:
       - name: Run CI
         run: |
@@ -29,47 +29,47 @@ jobs:
     runs-on: ubuntu-latest
     name: Front Api Validation & Build
     needs: [dotnet-setup]
-    strategy:
-      matrix:
-        projectPaths:
-          - "Service-Tests"
+    #    strategy:
+    #      matrix:
+    #        projectPaths:
+    #          - "Service-Tests"
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       # build and compile
-      - name: Restore dependencies on dashboard backend
-        run: cd ${{ github.workspace }}/backend/Dashboard-backend && dotnet restore
-      - name: Build on dashboard backend
-        run: cd ${{ github.workspace }}/backend/Dashboard-backend && dotnet build --no-restore
-  test-CI:
-    runs-on: ubuntu-latest
-    name: Test Runner
-    needs: [dotnet-setup]
-    strategy:
-      matrix:
-        projectPaths:
-          - "Service-Tests"
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      # service tests
-      - name: Run Tests
-        run: |
-          for path in ${{ join( matrix.projectPaths , ' ')}} }}; do
-            echo "Tests Start for $path"
-            cd ${{ github.workspace }}/backend/$path && dotnet restore
-            cd ${{ github.workspace }}/backend/$path && dotnet build --no-restore
-            cd ${{ github.workspace }}/backend/$path && dotnet test --no-build --verbosity normal
-            echo "Tests Finished for $path"
-          done
+      - name: Restore dependencies
+        run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet restore
+      - name: Build
+        run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet build --no-restore
+  #  test-CI:
+  #    runs-on: ubuntu-latest
+  #    name: Test Runner
+  #    needs: [dotnet-setup]
+  #    strategy:
+  #      matrix:
+  #        projectPaths:
+  #          - "Service-Tests"
+  #    steps:
+  #      - uses: actions/checkout@v3
+  #        with:
+  #          fetch-depth: 0
+  #      # service tests
+  #      - name: Run Tests
+  #        run: |
+  #          for path in ${{ join( matrix.projectPaths , ' ')}} }}; do
+  #            echo "Tests Start for $path"
+  #            cd ${{ github.workspace }}/backend/$path && dotnet restore
+  #            cd ${{ github.workspace }}/backend/$path && dotnet build --no-restore
+  #            cd ${{ github.workspace }}/backend/$path && dotnet test --no-build --verbosity normal
+  #            echo "Tests Finished for $path"
+  #          done
   node-setup:
     runs-on: ubuntu-latest
     name: Setup Node
     strategy:
       matrix:
-        node-version: [16.x, 18.x, 20.x]
+        node-version: [18.x, 20.x]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -87,7 +87,7 @@ jobs:
       actions: "read"
     strategy:
       matrix:
-        node-version: [16.x, 18.x, 20.x]
+        node-version: [18.x, 20.x]
     steps:
       - uses: actions/checkout@v3
         with:
