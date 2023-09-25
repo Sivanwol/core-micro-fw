@@ -78,6 +78,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+          cache: "yarn"
   frontend-platforms:
     name: Frontend Platforms Lint & Build
     needs: [node-setup]
@@ -88,14 +89,17 @@ jobs:
     strategy:
       matrix:
         node-version: [18.x, 20.x]
+        cache: "yarn"
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - uses: c-hive/gha-yarn-cache@v2
       - uses: nrwl/nx-set-shas@v3
-      - run: npm i -G yarn
-      - run: cd ${{ github.workspace }}/frontend && yarn install --frozen-lockfile
-      - run: cd ${{ github.workspace }}/frontend && npx nx format:check
+      - name: Install JS dependencies
+        run: cd ${{ github.workspace }}/frontend && yarn install --frozen-lockfile
+      - name: running nx operations
+        run: cd ${{ github.workspace }}/frontend && npx nx format:check
       - run: cd ${{ github.workspace }}/frontend && npx nx affected -t lint --parallel=3
       - run: cd ${{ github.workspace }}/frontend && npx nx affected -t test --parallel=3 --configuration=ci
       - run: cd ${{ github.workspace }}/frontend && npx nx affected -t build --parallel=3
