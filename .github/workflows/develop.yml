@@ -170,7 +170,7 @@ jobs:
         run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet build --no-restore
       - run: cd ${{ github.workspace }}/backend && ls -ga
       # build and push image
-      - name: Build and push Docker image on dashboard backend
+      - name: Build and push Docker image on Front Api
         uses: docker/build-push-action@v4
         with:
           context: ./backend

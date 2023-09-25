@@ -10,25 +10,19 @@ ENV PATH="${PATH}:/root/.dotnet/tools"
 
 # copy csproj 
 RUN mkdir -p /src
-RUN ls -ga .
 WORKDIR /src
 
 COPY . ./Application/ 
 COPY . ./Domain/ 
 COPY . ./Processor/ 
 COPY . ./Services/FrontApi/ 
-RUN ls -ga .
 # restore and build
 RUN cd Application && dotnet restore Application/*.csproj
 RUN cd Domain && dotnet restore Domain/*.csproj
 RUN cd Processor && dotnet restore Processor/*.csproj
 RUN cd Services/FrontApi && dotnet restore Services/FrontApi/*.csproj
 RUN cd Services/FrontApi && dotnet build "Services/FrontApi/FrontApi.csproj" -c Release -o /app/build
-
-
-FROM build AS publish
-WORKDIR /src/Services/FrontApi
-RUN dotnet publish -c release -o /app/publish --no-restore
+RUN cd Services/FrontApi && dotnet publish -c release -o /app/publish --no-restore
 
 FROM base AS final
 WORKDIR /app
