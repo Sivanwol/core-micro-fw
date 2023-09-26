@@ -1,17 +1,18 @@
 using Application.Elasticsearch;
 using MassTransit;
+using Serilog;
 
-namespace Processor.Consumers.IndexUser; 
+namespace Processor.Consumers.IndexUser;
 
-public class IndexUserConsumerHandler: IConsumer<IndexUserEvent> {
+public class IndexUserConsumerHandler : IConsumer<IndexUserEvent> {
     private readonly IBaseElasticRepository<IndexUserRequest> _indexUser;
 
-    public IndexUserConsumerHandler(IBaseElasticRepository<IndexUserRequest> entity)
-    {
+    public IndexUserConsumerHandler(IBaseElasticRepository<IndexUserRequest> entity) {
         _indexUser = entity;
     }
 
     public async Task Consume(ConsumeContext<IndexUserEvent> context) {
+        Log.Information("Process Index");
         await _indexUser.CreateIndexAsync();
         var user = context.Message.User;
         await _indexUser.InsertAsync(new IndexUserRequest {
@@ -21,8 +22,8 @@ public class IndexUserConsumerHandler: IConsumer<IndexUserEvent> {
 }
 
 public class IndexUserConsumerDefinition : ConsumerDefinition<IndexUserConsumerHandler> {
-    protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator, IConsumerConfigurator<IndexUserConsumerHandler> consumerConfigurator)
-    {
+    protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator,
+        IConsumerConfigurator<IndexUserConsumerHandler> consumerConfigurator) {
         //consumerConfigurator.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(3)));
     }
 }

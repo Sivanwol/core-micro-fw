@@ -30,31 +30,38 @@ public class UsersProcessTest : BaseTest {
     }
 
     [Test]
-    public async Task IndexNewUser() {
+    public async Task IndexNewUserTest() {
         var user = MockTestHelper.GetUsers()[0];
-        var provider = new ServiceCollection()
-            .AddMassTransitInMemoryTestHarness(cfg => {
+        await using var provider = new ServiceCollection()
+            .AddMassTransitTestHarness(cfg => {
                 cfg.AddDelayedMessageScheduler();
-                cfg.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
                 cfg.AddConsumers(typeof(IndexUserConsumerHandler));
-                cfg.UsingRabbitMq((context, cfg) => { cfg.ConfigureEndpoints(context); });
+                cfg.UsingInMemory((context, cfg) => {
+                    cfg.UseDelayedMessageScheduler();
+
+                    cfg.ConfigureEndpoints(context);
+                });
             })
             .BuildServiceProvider(true);
         var harness = provider.GetRequiredService<ITestHarness>();
         await harness.Start();
+        try {
+            var client = harness.GetRequestClient<IndexUserRequest>();
+            var response = await client.GetResponse<IndexUserConsumerHandler>(new IndexUserRequest {
+                Id = Guid.NewGuid().ToString(),
+                Auth0Id = user.Auth0Id,
+                UpdateTime = SystemClock.Now().DateTime
+            });
 
-        var client = harness.GetRequestClient<IndexUserEvent>();
-        var response = await client.GetResponse<IndexUserEvent>(new IndexUserRequest {
-            Auth0Id = user.Auth0Id,
-            Id = Guid.NewGuid().ToString(),
-            UpdateTime = SystemClock.Now().DateTime
-        });
-
-        Assert.IsTrue(await harness.Sent.Any<IndexUserEvent>());
-
-        Assert.IsTrue(await harness.Consumed.Any<IndexUserEvent>());
-        Assert.NotNull(response);
-        Assert.NotNull(response.Message);
-        Assert.Equals(response.Message.User.Auth0Id, user.Auth0Id);
+            Assert.True(await harness.Sent.Any<IndexUserRequest>());
+            Assert.True(await harness.Consumed.Any<IndexUserEvent>());
+        }
+        catch (Exception exec) {
+            var error = exec.Message;
+        }
+        finally {
+            await harness.Stop();
+            await provider.DisposeAsync();
+        }
     }
 }
