@@ -8,3 +8,4 @@ docker-data
 .DS_Store
 Thumbs.db
 *.log
+*.DotSettings.user
