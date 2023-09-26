@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Processor.Handlers.User.List; 
 
 public class ListUsersHandler: IRequestHandler<ListUsersRequest, List<ListUserResponse>> {
-    private readonly DomainContext _context;
+    private readonly IDomainContext _context;
     private readonly IMediator _mediator;
-    public ListUsersHandler(IMediator mediator, DomainContext context)
+    public ListUsersHandler(IMediator mediator, IDomainContext context)
     {
         _context = context;
         _mediator = mediator;
