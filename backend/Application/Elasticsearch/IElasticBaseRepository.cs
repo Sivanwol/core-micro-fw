@@ -1,9 +1,8 @@
 using Nest;
 
-namespace Application.Elasticsearch; 
+namespace Application.Elasticsearch;
 
-public interface IElasticBaseRepository<T> where T : class
-{
+public interface IElasticBaseRepository<T> where T : class {
     Task<T> GetAsync(string id);
     Task<T> GetAsync(IGetRequest request);
     Task<T> FindAsync(string id);
@@ -12,7 +11,10 @@ public interface IElasticBaseRepository<T> where T : class
     Task<IEnumerable<T>> GetManyAsync(IEnumerable<string> ids);
     Task<IEnumerable<T>> SearchAsync(Func<SearchDescriptor<T>, ISearchRequest> selector);
     Task<IEnumerable<T>> SearchAsync(Func<QueryContainerDescriptor<T>, QueryContainer> request);
-    Task<ISearchResponse<T>> SearchAsync(Func<QueryContainerDescriptor<T>, QueryContainer> request, Func<AggregationContainerDescriptor<T>, IAggregationContainer> aggregationsSelector);
+
+    Task<ISearchResponse<T>> SearchAsync(Func<QueryContainerDescriptor<T>, QueryContainer> request,
+        Func<AggregationContainerDescriptor<T>, IAggregationContainer> aggregationsSelector);
+
     Task<bool> CreateIndexAsync();
     Task<bool> InsertAsync(T t);
     Task<bool> InsertManyAsync(IList<T> tList);
