@@ -17,8 +17,8 @@
         <PackageReference Include="MediatR" Version="12.1.1" />
         <PackageReference Include="Microsoft.AspNet.Mvc" Version="5.2.9" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.11">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="7.0.11" />
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="7.0.11" />
@@ -35,14 +35,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Application\Application.csproj" />
-      <ProjectReference Include="..\..\Domain\Domain.csproj" />
-      <ProjectReference Include="..\..\Processor\Processor.csproj" />
+        <ProjectReference Include="..\..\Application\Application.csproj"/>
+        <ProjectReference Include="..\..\Domain\Domain.csproj"/>
+        <ProjectReference Include="..\..\Processor\Processor.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="docker-compose.dev.yml" />
-      <None Remove="Dockerfile" />
+        <None Remove="docker-compose.dev.yml"/>
+        <None Remove="frontApi.CI.Dockerfile"/>
+        <None Remove="frontApi.dev.Dockerfile"/>
+        <None Remove="frontApi.QA.Dockerfile"/>
     </ItemGroup>
 
 </Project>
