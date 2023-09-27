@@ -2,7 +2,7 @@ using Application.Utils;
 using Application.Extensions;
 using Serilog;
 
-namespace FrontApiRealTime;
+namespace DevopsTools;
 
 public class Program {
     private static string? _getCurrentEnvironment;
@@ -13,7 +13,7 @@ public class Program {
 
     public static int Main(string[] args) {
         try {
-            SerilogExtension.ProcessLogHandler("FrontApiRealTime", _getCurrentEnvironment ??= "development");
+            SerilogExtension.ProcessLogHandler("DevopsTools", _getCurrentEnvironment ??= "development");
             Log.Information("Starting host...");
             CreateHostBuilder(args).Build().Run();
             return 0;

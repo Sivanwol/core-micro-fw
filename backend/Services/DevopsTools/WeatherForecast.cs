@@ -1,4 +1,4 @@
-namespace FrontApiRealTime;
+namespace DevopsTools;
 
 public class WeatherForecast {
     public DateOnly Date { get; set; }

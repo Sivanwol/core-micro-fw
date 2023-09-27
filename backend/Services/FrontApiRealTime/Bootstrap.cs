@@ -8,7 +8,7 @@ using Processor.Handlers.User.Create;
 using Processor.Handlers.User.List;
 using Serilog;
 
-namespace FrontApi;
+namespace FrontApiRealTime;
 
 public class Bootstrap {
     public Bootstrap(IConfiguration configuration, IWebHostEnvironment env) {
@@ -32,10 +32,9 @@ public class Bootstrap {
             services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
         });
         if (Environment.IsDevelopment() || useLocalRQ) {
-            services.AddSwaggerExtension(Configuration, "Front Api Docs", "V1");
+            services.AddSwaggerExtension(Configuration, "Front Api Realtime Docs", "V1");
         }
 
-        // services.AddAutoMapper(typeof(DomainProcessorProfile));
         services.AddMediatR(configuration => {
             configuration.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
             configuration.RegisterServicesFromAssemblyContaining(typeof(ListUsersRequest));
@@ -43,7 +42,7 @@ public class Bootstrap {
         });
         services.AddElasticsearch(Configuration);
         services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
-        services.AddHealthChecks().AddCheck<GeneralHealthCheck>("front_api_service");
+        services.AddHealthChecks().AddCheck<GeneralHealthCheck>("front_api_real_time_service");
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
@@ -51,7 +50,6 @@ public class Bootstrap {
         if (Environment.IsDevelopment() || useLocalRQ) {
             app.UseSwaggerExtension(env);
         }
-
 
         app.UseGenericServiceExtension(env, () => {
             if (!Environment.IsDevelopment()) {

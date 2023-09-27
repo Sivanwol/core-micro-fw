@@ -1,14 +1,12 @@
-using System.Reflection;
 using Application.Extensions;
-using Application.Utils;
 using Domain.Context;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
-using Processor.Consumers.IndexUser;
-using Processor.Handlers.User.Create;
-using Processor.Handlers.User.List;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog;
 
-namespace FrontApi;
+namespace DevopsTools;
 
 public class Bootstrap {
     public Bootstrap(IConfiguration configuration, IWebHostEnvironment env) {
@@ -35,15 +33,8 @@ public class Bootstrap {
             services.AddSwaggerExtension(Configuration, "Front Api Docs", "V1");
         }
 
-        // services.AddAutoMapper(typeof(DomainProcessorProfile));
-        services.AddMediatR(configuration => {
-            configuration.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
-            configuration.RegisterServicesFromAssemblyContaining(typeof(ListUsersRequest));
-            configuration.RegisterServicesFromAssemblyContaining(typeof(CreateUserRequest));
-        });
         services.AddElasticsearch(Configuration);
-        services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
-        services.AddHealthChecks().AddCheck<GeneralHealthCheck>("front_api_service");
+        services.AddHealthChecksUI().AddPostgreSqlStorage(Configuration.GetConnectionString("DbConnection"));
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
@@ -52,11 +43,23 @@ public class Bootstrap {
             app.UseSwaggerExtension(env);
         }
 
+        if (!Environment.IsDevelopment()) {
+            app.UseHsts();
+        }
 
         app.UseGenericServiceExtension(env, () => {
-            if (!Environment.IsDevelopment()) {
-                app.UseHsts();
-            }
+            app.UseHealthChecks("/healthz", new HealthCheckOptions {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+                ResultStatusCodes = {
+                    [HealthStatus.Healthy] = StatusCodes.Status200OK,
+                    [HealthStatus.Degraded] = StatusCodes.Status500InternalServerError,
+                    [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable,
+                }
+            }).UseHealthChecksUI(setup => {
+                setup.ApiPath = "/healthcheck";
+                setup.UIPath = "/healthcheck-ui";
+            });
         });
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }

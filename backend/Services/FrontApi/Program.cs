@@ -1,12 +1,9 @@
-
-using Application.Utils;
 using Application.Extensions;
 using Serilog;
 
-namespace FrontApi; 
+namespace FrontApi;
 
 public class Program {
-    
     private static string? _getCurrentEnvironment;
 
     static Program() {
