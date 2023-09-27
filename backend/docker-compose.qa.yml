@@ -5,7 +5,7 @@ services:
     container_name: front-api-container
     build:
       context: .
-      dockerfile: ./frontApi.QA.Dockerfile
+      dockerfile: ./Services/FrontApi/frontApi.QA.Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - RabbitMqSettings:Host=rabbitmq

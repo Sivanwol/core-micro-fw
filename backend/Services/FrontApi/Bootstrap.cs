@@ -2,7 +2,11 @@ using System.Reflection;
 using Application.Extensions;
 using Application.Utils;
 using Domain.Context;
+using HealthChecks.ApplicationStatus.DependencyInjection;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Processor.Consumers.IndexUser;
 using Processor.Handlers.User.Create;
 using Processor.Handlers.User.List;
@@ -43,7 +47,11 @@ public class Bootstrap {
         });
         services.AddElasticsearch(Configuration);
         services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
-        services.AddHealthChecks().AddCheck<GeneralHealthCheck>("front_api_service");
+        // health checks registration
+        services.AddHealthChecks()
+            .AddNpgSql(Configuration.GetConnectionString("DbConnection"))
+            .AddApplicationStatus();
+        services.AddHealthChecksUI().AddPostgreSqlStorage(Configuration.GetConnectionString("DbConnection"));
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
@@ -52,6 +60,15 @@ public class Bootstrap {
             app.UseSwaggerExtension(env);
         }
 
+        app.UseHealthChecks("/healthz", new HealthCheckOptions {
+            Predicate = _ => true,
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+            ResultStatusCodes = {
+                [HealthStatus.Healthy] = StatusCodes.Status200OK,
+                [HealthStatus.Degraded] = StatusCodes.Status500InternalServerError,
+                [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable,
+            }
+        });
 
         app.UseGenericServiceExtension(env, () => {
             if (!Environment.IsDevelopment()) {

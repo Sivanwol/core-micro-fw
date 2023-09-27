@@ -1,4 +1,5 @@
 using Application.Extensions;
+using Application.Utils;
 using Domain.Context;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -30,10 +31,10 @@ public class Bootstrap {
             services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
         });
         if (Environment.IsDevelopment() || useLocalRQ) {
-            services.AddSwaggerExtension(Configuration, "Front Api Docs", "V1");
+            services.AddSwaggerExtension(Configuration, "Devops Tools Docs", "V1");
         }
 
-        services.AddElasticsearch(Configuration);
+        services.AddHealthChecks().AddCheck<GeneralHealthCheck>("devops_tools_service");
         services.AddHealthChecksUI().AddPostgreSqlStorage(Configuration.GetConnectionString("DbConnection"));
     }
 
@@ -43,11 +44,12 @@ public class Bootstrap {
             app.UseSwaggerExtension(env);
         }
 
-        if (!Environment.IsDevelopment()) {
-            app.UseHsts();
-        }
 
         app.UseGenericServiceExtension(env, () => {
+            if (!Environment.IsDevelopment()) {
+                app.UseHsts();
+            }
+
             app.UseHealthChecks("/healthz", new HealthCheckOptions {
                 Predicate = _ => true,
                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,

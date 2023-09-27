@@ -24,6 +24,7 @@
         <PackageReference Include="AspNetCore.HealthChecks.UI.PostgreSQL.Storage" Version="7.0.0"/>
         <PackageReference Include="HealthChecks.PostgreSQL" Version="1.1.0"/>
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="7.0.11"/>
+        <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="7.0.11"/>
         <PackageReference Include="Npgsql" Version="7.0.6"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11"/>
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0"/>
