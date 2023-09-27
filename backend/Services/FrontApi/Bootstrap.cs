@@ -1,4 +1,3 @@
-
 using System.Reflection;
 using System.Text;
 using Application.Extensions;
@@ -13,10 +12,9 @@ using Processor.Handlers.User.Create;
 using Processor.Handlers.User.List;
 using Serilog;
 
-namespace FrontApi; 
+namespace FrontApi;
 
 public class Bootstrap {
-    
     public Bootstrap(IConfiguration configuration, IWebHostEnvironment env) {
         Configuration = configuration;
         Environment = env;
@@ -29,9 +27,8 @@ public class Bootstrap {
     public static IWebHostEnvironment Environment { get; set; }
 
     public static IConfiguration Configuration { get; set; }
-    
+
     public void ConfigureServices(IServiceCollection services) {
-        
         var useLocalRQ = Boolean.Parse(Configuration["ENABLE_SWAGGER"] ?? "false");
         Log.Information("Start Configure Server");
         services.AddGenericServiceExtension(Configuration, Domain, () => {
@@ -41,6 +38,7 @@ public class Bootstrap {
         if (Environment.IsDevelopment() || useLocalRQ) {
             services.AddSwaggerExtension(Configuration, "Front Api Docs", "V1");
         }
+
         // services.AddAutoMapper(typeof(DomainProcessorProfile));
         services.AddMediatR(configuration => {
             configuration.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
@@ -48,9 +46,7 @@ public class Bootstrap {
             configuration.RegisterServicesFromAssemblyContaining(typeof(CreateUserRequest));
         });
         services.AddElasticsearch(Configuration);
-        services.AddMassTransitExtension(Configuration, bus => {
-            bus.AddConsumer<IndexUserConsumerHandler>();
-        });
+        services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
         services.AddHealthChecks();
         services.AddHealthChecksUI();
         services.AddHealthChecksUI().AddPostgreSqlStorage(Configuration.GetConnectionString("DbConnection"));
@@ -61,27 +57,25 @@ public class Bootstrap {
         if (Environment.IsDevelopment() || useLocalRQ) {
             app.UseSwaggerExtension(env);
         }
+
+        if (!Environment.IsDevelopment()) {
+            app.UseHsts();
+        }
+
         app.UseGenericServiceExtension(env, () => {
-            
-            app.UseHealthChecks("/healthz", new HealthCheckOptions
-            {
+            app.UseHealthChecks("/healthz", new HealthCheckOptions {
                 Predicate = _ => true,
                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
-                ResultStatusCodes =
-                {
+                ResultStatusCodes = {
                     [HealthStatus.Healthy] = StatusCodes.Status200OK,
                     [HealthStatus.Degraded] = StatusCodes.Status500InternalServerError,
                     [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable,
                 }
-            }).UseHealthChecksUI(setup =>
-            {
+            }).UseHealthChecksUI(setup => {
                 setup.ApiPath = "/healthcheck";
                 setup.UIPath = "/healthcheck-ui";
             });
         });
-        app.UseEndpoints(endpoints => {
-            endpoints.MapControllers();
-        });
+        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }
-
 }

@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Processor", "backend\Proces
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Processor.test", "backend\Processor.test\Processor.test.csproj", "{88D42AA0-E769-4384-84FF-D7FD2634C5AA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrontApiRealTime", "backend\Services\FrontApiRealTime\FrontApiRealTime.csproj", "{694BC51D-5C77-4F80-AD27-F66F745DC63E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,5 +46,9 @@ Global
 		{88D42AA0-E769-4384-84FF-D7FD2634C5AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88D42AA0-E769-4384-84FF-D7FD2634C5AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88D42AA0-E769-4384-84FF-D7FD2634C5AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{694BC51D-5C77-4F80-AD27-F66F745DC63E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{694BC51D-5C77-4F80-AD27-F66F745DC63E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{694BC51D-5C77-4F80-AD27-F66F745DC63E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{694BC51D-5C77-4F80-AD27-F66F745DC63E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
