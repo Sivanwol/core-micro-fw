@@ -25,6 +25,9 @@ services:
     extends:
       file: docker-compose.base.yml
       service: db
+    environment:
+      - SA_PASSWORD=developer123!
+      - ACCEPT_EULA=Y
   rabbitmq:
     hostname: rabbitmq
     extends:
@@ -44,7 +47,7 @@ services:
       service: elasticsearch
 
 volumes:
-  pgdata:
+  sqlserver_data:
     driver: local
   local_es:
     driver: local

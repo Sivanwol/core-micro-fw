@@ -11,7 +11,7 @@ services:
       - RabbitMqSettings:Host=rabbitmq
       - ElasticApm:ServerUrls=http://elasticsearch:9200
       - ElasticsearchSettings:Uri=http://elasticsearch:9200
-      - DbConnection="Host=host.docker.internal; Port=5432; Database=postgres; User Id=postgres; Password=postgres; Pooling=true; MinPoolSize=0; MaxPoolSize=100; Timeout=15; CommandTimeout=300; PersistSecurityInfo=True;"
+      - ConnectionStrings:DbConnection="Server=db;Database=platform;User Id=developer;Password=developer123!;MultipleActiveResultSets=true;TrustServerCertificate=True"
     extends:
       file: docker-compose.base.yml
       service: front-api-service
@@ -25,6 +25,9 @@ services:
     extends:
       file: docker-compose.base.yml
       service: db
+    environment:
+      - SA_PASSWORD=developer123!
+      - ACCEPT_EULA=Y
   rabbitmq:
     hostname: rabbitmq
     extends:
@@ -44,7 +47,7 @@ services:
       service: elasticsearch
 
 volumes:
-  pgdata:
+  db_data:
     driver: local
   local_es:
     driver: local

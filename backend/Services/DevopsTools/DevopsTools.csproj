@@ -19,14 +19,22 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.11">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.11"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.11">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="7.0.0"/>
         <PackageReference Include="AspNetCore.HealthChecks.UI" Version="7.0.2"/>
         <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="7.1.0"/>
-        <PackageReference Include="AspNetCore.HealthChecks.UI.PostgreSQL.Storage" Version="7.0.0"/>
-        <PackageReference Include="HealthChecks.PostgreSQL" Version="1.1.0"/>
+        <PackageReference Include="AspNetCore.HealthChecks.UI.SqlServer.Storage" Version="7.0.0"/>
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="7.0.11"/>
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="7.0.11"/>
-        <PackageReference Include="Npgsql" Version="7.0.6"/>
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11"/>
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0"/>
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0"/>
     </ItemGroup>

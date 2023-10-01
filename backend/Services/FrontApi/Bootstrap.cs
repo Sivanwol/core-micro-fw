@@ -18,21 +18,25 @@ public class Bootstrap {
     public Bootstrap(IConfiguration configuration, IWebHostEnvironment env) {
         Configuration = configuration;
         Environment = env;
-
         Domain = $"https://{Configuration["Auth0:Domain"]}/";
-        Log.Information($"Connect to Db Domain: {configuration.GetConnectionString("DbConnection")}");
+        var useDockerConnectionConfigValue = Configuration["ExtractDockerConnection"] ?? "false";
+        var useDockerConnection = Boolean.Parse(useDockerConnectionConfigValue);
+        ActiveConnectionString =
+            Configuration.GetConnectionString(useDockerConnection ? "DockerConnection" : "DbConnection");
+        Log.Information($"Connect to Db Domain: {ActiveConnectionString}");
     }
 
     private static string Domain;
     public static IWebHostEnvironment Environment { get; set; }
 
     public static IConfiguration Configuration { get; set; }
+    public static string ActiveConnectionString { get; private set; }
 
     public void ConfigureServices(IServiceCollection services) {
         var useLocalRQ = Boolean.Parse(Configuration["ENABLE_SWAGGER"] ?? "false");
         Log.Information("Start Configure Server");
         services.AddGenericServiceExtension(Configuration, Domain, () => {
-            services.AddDbContext<DomainContext>(options => options.UseNpgsql("Name=DbConnection"));
+            services.AddDbContext<DomainContext>(options => options.UseSqlServer(ActiveConnectionString));
             services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
         });
         if (Environment.IsDevelopment() || useLocalRQ) {
@@ -49,9 +53,9 @@ public class Bootstrap {
         services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
         // health checks registration
         services.AddHealthChecks()
-            .AddNpgSql(Configuration.GetConnectionString("DbConnection"))
+            .AddSqlServer(ActiveConnectionString, name: "DomainConnection", tags: new[] { "db" })
             .AddApplicationStatus();
-        services.AddHealthChecksUI().AddPostgreSqlStorage(Configuration.GetConnectionString("DbConnection"));
+        services.AddHealthChecksUI().AddSqlServerStorage(ActiveConnectionString);
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {

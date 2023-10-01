@@ -1,9 +1,6 @@
-﻿
-
-using Domain.Entities;
+﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 
 namespace Domain.Context;
 
@@ -23,19 +20,17 @@ public partial class DomainContext : DbContext, IDomainContext {
     }
 
     public void Initialize() {
-        _logger.LogInformation("Initializing DBContext.");
-        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-        AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
+        _logger.LogInformation("Initializing DomainContext.");
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-        _logger.LogInformation("Configuring DBContext.");
+        _logger.LogInformation("Configuring DomainContext.");
     }
 
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
-        _logger.LogInformation("Configuring DBContext model.");
+        _logger.LogInformation("Configuring DomainContext model.");
         // modelBuilder.HasPostgresEnum<GameType>(); 
         modelBuilder.Entity<User>();
         OnModelCreatingPartial(modelBuilder);
@@ -44,7 +39,7 @@ public partial class DomainContext : DbContext, IDomainContext {
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 
     public new void Dispose() {
-        _logger.LogInformation("Disposing DBContext instance.");
+        _logger.LogInformation("Disposing DomainContext instance.");
         base.Dispose();
     }
 }
