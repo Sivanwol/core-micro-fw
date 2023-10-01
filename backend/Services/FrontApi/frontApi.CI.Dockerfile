@@ -23,11 +23,11 @@ RUN cd Processor && dotnet restore Processor/*.csproj
 RUN cd Services/FrontApi && dotnet restore Services/FrontApi/*.csproj
 RUN cd Services/FrontApi && dotnet build "Services/FrontApi/FrontApi.csproj" -c Release -o /app/build
 
-
 FROM build AS publish
 WORKDIR /src
-RUN cd Services/FrontApi && dotnet publish -c release -o /app/publish --no-restore
+# publish project
+RUN cd /src/Services/FrontApi && dotnet publish "Services/FrontApi/FrontApi.csproj" -c release -o /app/publish --no-restore
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .

@@ -47,7 +47,7 @@ services:
       service: elasticsearch
 
 volumes:
-  pgdata:
+  sqlserver_data:
     driver: local
   local_es:
     driver: local

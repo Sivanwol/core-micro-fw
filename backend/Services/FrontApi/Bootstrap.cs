@@ -53,9 +53,9 @@ public class Bootstrap {
         services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
         // health checks registration
         services.AddHealthChecks()
-            .AddNpgSql(Configuration.GetConnectionString("DbConnection"))
+            .AddSqlServer(ActiveConnectionString, name: "DomainConnection", tags: new[] { "db" })
             .AddApplicationStatus();
-        services.AddHealthChecksUI().AddPostgreSqlStorage(Configuration.GetConnectionString("DbConnection"));
+        services.AddHealthChecksUI().AddSqlServerStorage(ActiveConnectionString);
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
