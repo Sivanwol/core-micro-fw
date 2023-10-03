@@ -19,13 +19,12 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, InsertIdResp
     }
 
     public async Task<InsertIdResponse> Handle(CreateUserRequest request, CancellationToken cancellationToken) {
-        var user = _context.Users;
+        var user = _context;
         if (user != null) throw new EntityFoundException("users", user.ToString());
-        var entity = new Domain.Entities.User() { };
-        _context.Users.Add(entity);
+        // var entity = new Domain.Entities.User() { };
         _context.Instance.SaveChanges();
         await _bus.Publish(new IndexUserEvent {
-            User = entity
+            // User = entity
         }, cancellationToken);
         return new InsertIdResponse { };
         ;

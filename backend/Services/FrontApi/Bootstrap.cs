@@ -2,9 +2,11 @@ using System.Reflection;
 using Application.Extensions;
 using Application.Utils;
 using Domain.Context;
+using Domain.Entities;
 using HealthChecks.ApplicationStatus.DependencyInjection;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Processor.Consumers.IndexUser;
@@ -39,6 +41,9 @@ public class Bootstrap {
             services.AddDbContext<DomainContext>(options => options.UseSqlServer(ActiveConnectionString));
             services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
         });
+        services.AddIdentityApiEndpoints<ApplicationUser>().AddEntityFrameworkStores<DomainContext>();
+        services.AddAuthentication();
+        services.AddAuthentication("Bearer").AddJwtBearer();
         if (Environment.IsDevelopment() || useLocalRQ) {
             services.AddSwaggerExtension(Configuration, "Front Api Docs", "V1");
         }
@@ -50,7 +55,7 @@ public class Bootstrap {
             configuration.RegisterServicesFromAssemblyContaining(typeof(CreateUserRequest));
         });
         services.AddElasticsearch(Configuration);
-        // services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
+        services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
         // health checks registration
         services.AddHealthChecks()
             .AddSqlServer(ActiveConnectionString, name: "DomainConnection", tags: new[] { "db" })
@@ -79,6 +84,12 @@ public class Bootstrap {
                 app.UseHsts();
             }
         });
-        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints => {
+            endpoints.MapGroup("/auth").MapIdentityApi<ApplicationUser>();
+            endpoints.MapControllers();
+        });
     }
 }

@@ -15,7 +15,6 @@ public class ListUsersHandler : IRequestHandler<ListUsersRequest, List<ListUserR
     }
 
     public async Task<List<ListUserResponse>> Handle(ListUsersRequest request, CancellationToken cancellationToken) {
-        var users = await _context.Users.ToListAsync(cancellationToken);
-        return users.Select(x => new ListUserResponse { }).ToList();
+        return new List<ListUserResponse>();
     }
 }

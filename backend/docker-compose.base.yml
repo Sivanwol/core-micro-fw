@@ -33,7 +33,6 @@ services:
     build:
       context: .
       dockerfile: MSSQL.Dockerfile
-    user: root
     environment:
       ACCEPT_EULA: Y
       SA_PASSWORD: developer123!

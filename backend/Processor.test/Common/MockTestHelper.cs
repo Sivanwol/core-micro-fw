@@ -18,14 +18,14 @@ public static class MockTestHelper {
         Context = new Mock<IDomainContext>();
         var users = GetUsers();
 
-        Context.SetupProperty(c => c.Users, users.AsQueryable().BuildMockDbSet().Object);
+        // Context.SetupProperty(c => c.Users, users.AsQueryable().BuildMockDbSet().Object);
         return Context;
     }
 
-    public static List<User> GetUsers() {
-        return new List<User> {
-            new User { },
-            new User { }
+    public static List<ApplicationUser> GetUsers() {
+        return new List<ApplicationUser> {
+            new ApplicationUser { },
+            new ApplicationUser { }
         };
     }
 
