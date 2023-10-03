@@ -50,7 +50,7 @@ public class Bootstrap {
             configuration.RegisterServicesFromAssemblyContaining(typeof(CreateUserRequest));
         });
         services.AddElasticsearch(Configuration);
-        services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
+        // services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
         // health checks registration
         services.AddHealthChecks()
             .AddSqlServer(ActiveConnectionString, name: "DomainConnection", tags: new[] { "db" })

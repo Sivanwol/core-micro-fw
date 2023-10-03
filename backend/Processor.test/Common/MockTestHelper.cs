@@ -1,4 +1,3 @@
-
 using Domain.Context;
 using Domain.Entities;
 using MockQueryable.Moq;
@@ -18,22 +17,15 @@ public static class MockTestHelper {
     private static Mock<IDomainContext> SetupEntities() {
         Context = new Mock<IDomainContext>();
         var users = GetUsers();
-        
+
         Context.SetupProperty(c => c.Users, users.AsQueryable().BuildMockDbSet().Object);
         return Context;
     }
+
     public static List<User> GetUsers() {
         return new List<User> {
-            new User {
-                Id = 1,
-                Active = true,
-                Auth0Id = "auth0|1234567890"
-            },
-            new User {
-                Id = 2,
-                Active = true,
-                Auth0Id = "auth0|1236567890"
-            }
+            new User { },
+            new User { }
         };
     }
 

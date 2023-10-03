@@ -15,9 +15,7 @@ public class IndexUserConsumerHandler : IConsumer<IndexUserEvent> {
         Log.Information("Process Index");
         await _indexUser.CreateIndexAsync();
         var user = context.Message.User;
-        await _indexUser.InsertAsync(new IndexUserRequest {
-            Auth0Id = user.Auth0Id
-        });
+        await _indexUser.InsertAsync(new IndexUserRequest { });
     }
 }
 

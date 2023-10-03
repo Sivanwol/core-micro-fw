@@ -24,9 +24,7 @@ public class UsersProcessTest : BaseTest {
         var exptendedEntities = MockTestHelper.GetUsers();
         Assert.That(response.Count, Is.EqualTo(exptendedEntities.Count));
         Assert.That(response[0].Id, Is.EqualTo(exptendedEntities[0].Id));
-        Assert.That(response[0].Auth0Id, Is.EqualTo(exptendedEntities[0].Auth0Id));
         Assert.That(response[1].Id, Is.EqualTo(exptendedEntities[1].Id));
-        Assert.That(response[1].Auth0Id, Is.EqualTo(exptendedEntities[1].Auth0Id));
     }
 
     [Test]
@@ -49,7 +47,6 @@ public class UsersProcessTest : BaseTest {
             var client = harness.GetRequestClient<IndexUserRequest>();
             var response = await client.GetResponse<IndexUserConsumerHandler>(new IndexUserRequest {
                 Id = Guid.NewGuid().ToString(),
-                Auth0Id = user.Auth0Id,
                 UpdateTime = SystemClock.Now().DateTime
             });
 
