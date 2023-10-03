@@ -1,6 +1,5 @@
 using System.Reflection;
 using Application.Extensions;
-using Application.Utils;
 using Domain.Context;
 using Domain.Entities;
 using HealthChecks.ApplicationStatus.DependencyInjection;
@@ -20,7 +19,6 @@ public class Bootstrap {
     public Bootstrap(IConfiguration configuration, IWebHostEnvironment env) {
         Configuration = configuration;
         Environment = env;
-        Domain = $"https://{Configuration["Auth0:Domain"]}/";
         var useDockerConnectionConfigValue = Configuration["ExtractDockerConnection"] ?? "false";
         var useDockerConnection = Boolean.Parse(useDockerConnectionConfigValue);
         ActiveConnectionString =
@@ -28,7 +26,6 @@ public class Bootstrap {
         Log.Information($"Connect to Db Domain: {ActiveConnectionString}");
     }
 
-    private static string Domain;
     public static IWebHostEnvironment Environment { get; set; }
 
     public static IConfiguration Configuration { get; set; }
@@ -37,12 +34,13 @@ public class Bootstrap {
     public void ConfigureServices(IServiceCollection services) {
         var useLocalRQ = Boolean.Parse(Configuration["ENABLE_SWAGGER"] ?? "false");
         Log.Information("Start Configure Server");
-        services.AddGenericServiceExtension(Configuration, Domain, () => {
+        services.AddGenericServiceExtension(Configuration, () => {
             services.AddDbContext<DomainContext>(options => options.UseSqlServer(ActiveConnectionString));
             services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
         });
         services.AddIdentityApiEndpoints<ApplicationUser>().AddEntityFrameworkStores<DomainContext>();
         services.AddAuthentication();
+
         services.AddAuthentication("Bearer").AddJwtBearer();
         if (Environment.IsDevelopment() || useLocalRQ) {
             services.AddSwaggerExtension(Configuration, "Front Api Docs", "V1");
@@ -54,6 +52,13 @@ public class Bootstrap {
             configuration.RegisterServicesFromAssemblyContaining(typeof(ListUsersRequest));
             configuration.RegisterServicesFromAssemblyContaining(typeof(CreateUserRequest));
         });
+        services.AddElasticsearch(Configuration);
+        services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
+        // health checks registration
+        services.AddHealthChecks()
+            .AddSqlServer(ActiveConnectionString, name: "DomainConnection", tags: new[] { "db" })
+            .AddApplicationStatus();
+        services.AddHealthChecksUI().AddSqlServerStorage(ActiveConnectionString);
         services.Configure<IdentityOptions>(options => {
             options.User.RequireUniqueEmail = true;
             options.Password.RequireDigit = true;
@@ -72,13 +77,6 @@ public class Bootstrap {
             options.User.AllowedUserNameCharacters =
                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
         });
-        services.AddElasticsearch(Configuration);
-        services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
-        // health checks registration
-        services.AddHealthChecks()
-            .AddSqlServer(ActiveConnectionString, name: "DomainConnection", tags: new[] { "db" })
-            .AddApplicationStatus();
-        services.AddHealthChecksUI().AddSqlServerStorage(ActiveConnectionString);
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {

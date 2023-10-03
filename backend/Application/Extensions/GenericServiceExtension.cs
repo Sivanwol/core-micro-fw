@@ -17,7 +17,7 @@ namespace Application.Extensions;
 
 public static class GenericServiceExtension {
     public static void AddGenericServiceExtension(this IServiceCollection services, IConfiguration configuration,
-        string domain, Action? moreConfigurationServices) {
+        Action? moreConfigurationServices) {
         Log.Information("Pre Configure Server");
         services.AddControllers();
         services.AddEndpointsApiExplorer();
