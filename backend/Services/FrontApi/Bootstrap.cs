@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text;
 using Application.Extensions;
 using Domain.Context;
 using Domain.Entities;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.IdentityModel.Tokens;
 using Processor.Consumers.IndexUser;
 using Processor.Handlers.User.Create;
 using Processor.Handlers.User.List;
@@ -32,21 +34,15 @@ public class Bootstrap {
     public static string ActiveConnectionString { get; private set; }
 
     public void ConfigureServices(IServiceCollection services) {
-        var useLocalRQ = Boolean.Parse(Configuration["ENABLE_SWAGGER"] ?? "false");
         Log.Information("Start Configure Server");
         services.AddGenericServiceExtension(Configuration, () => {
             services.AddDbContext<DomainContext>(options => options.UseSqlServer(ActiveConnectionString));
             services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
         });
-        services.AddIdentityApiEndpoints<ApplicationUser>().AddEntityFrameworkStores<DomainContext>();
-        services.AddAuthentication();
-
-        services.AddAuthentication("Bearer").AddJwtBearer();
-        if (Environment.IsDevelopment() || useLocalRQ) {
+        if (Environment.IsDevelopment() || bool.Parse(Configuration["ENABLE_SWAGGER"] ?? "false")) {
             services.AddSwaggerExtension(Configuration, "Front Api Docs", "V1");
         }
 
-        // services.AddAutoMapper(typeof(DomainProcessorProfile));
         services.AddMediatR(configuration => {
             configuration.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
             configuration.RegisterServicesFromAssemblyContaining(typeof(ListUsersRequest));
@@ -59,7 +55,10 @@ public class Bootstrap {
             .AddSqlServer(ActiveConnectionString, name: "DomainConnection", tags: new[] { "db" })
             .AddApplicationStatus();
         services.AddHealthChecksUI().AddSqlServerStorage(ActiveConnectionString);
+
+        // auth registration
         services.Configure<IdentityOptions>(options => {
+            options.SignIn.RequireConfirmedPhoneNumber = true;
             options.User.RequireUniqueEmail = true;
             options.Password.RequireDigit = true;
             options.Password.RequireLowercase = true;
@@ -77,11 +76,27 @@ public class Bootstrap {
             options.User.AllowedUserNameCharacters =
                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
         });
+
+
+        services.AddIdentityApiEndpoints<ApplicationUser>().AddEntityFrameworkStores<DomainContext>();
+        services.AddAuthentication();
+
+        services.AddAuthentication("Bearer").AddJwtBearer(o => {
+            o.TokenValidationParameters = new TokenValidationParameters {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = false,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = Configuration["Jwt:Issuer"],
+                ValidAudience = Configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey
+                    (Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
+            };
+        });
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-        var useLocalRQ = Boolean.Parse(Configuration["ENABLE_SWAGGER"] ?? "false");
-        if (Environment.IsDevelopment() || useLocalRQ) {
+        if (Environment.IsDevelopment() || bool.Parse(Configuration["ENABLE_SWAGGER"] ?? "false")) {
             app.UseSwaggerExtension(env);
         }
 
