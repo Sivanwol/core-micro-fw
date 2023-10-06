@@ -7,12 +7,15 @@ using Serilog;
 namespace Domain.Context;
 
 public class DomainContext : IdentityDbContext<ApplicationUser>, IDomainContext {
+    private readonly ILogger<DomainContext> _logger;
     public DbContext Instance => this;
 
-    public DbSet<Countries> Countries { get; set; }
+    public virtual DbSet<Countries> Countries { get; set; }
 
-    public DomainContext(DbContextOptions<DomainContext> options)
+    public DomainContext(DbContextOptions<DomainContext> options, ILogger<DomainContext> logger)
         : base(options) {
+        _logger = logger;
+        _logger.LogInformation("Pre Initializing DomainContext.");
         Initialize();
     }
 
@@ -22,5 +25,12 @@ public class DomainContext : IdentityDbContext<ApplicationUser>, IDomainContext 
 
     protected override void OnModelCreating(ModelBuilder builder) {
         base.OnModelCreating(builder);
+        _logger.LogInformation("Configuring DomainContext model.");
+        builder.Entity<Countries>();
+    }
+
+    public new void Dispose() {
+        _logger.LogInformation("Disposing DomainContext instance.");
+        base.Dispose();
     }
 }

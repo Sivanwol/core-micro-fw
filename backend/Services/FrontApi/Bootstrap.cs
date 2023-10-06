@@ -8,7 +8,7 @@ using HealthChecks.UI.Client;
 using Infrastructure.Services.Auth.Sender;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using FluentValidation;
-using FluentValidation.AspNetCore;
+using Infrastructure.Requests.Processor.Countries;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Auth.Models;
 using Infrastructure.Validators;
@@ -80,6 +80,7 @@ public class Bootstrap {
         services.AddMediatR(configuration => {
             configuration.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
             configuration.RegisterServicesFromAssemblyContaining(typeof(ListUsersRequest));
+            configuration.RegisterServicesFromAssemblyContaining<LocateCountryRequest>();
             configuration.RegisterServicesFromAssemblyContaining(typeof(CreateUserRequest));
         });
         services.AddElasticsearch(Configuration);

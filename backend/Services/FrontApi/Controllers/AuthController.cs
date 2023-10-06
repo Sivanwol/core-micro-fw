@@ -4,9 +4,12 @@ using FluentValidation.Results;
 using IdentityModel.Client;
 using Infrastructure.Enums;
 using Infrastructure.Models.Account;
+using Infrastructure.Requests.Processor.Countries;
 using Infrastructure.Responses.Auth;
+using Infrastructure.Responses.Processor.Countries;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Auth.Sender;
+using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,6 +23,7 @@ namespace FrontApi.Controllers;
 [Route("api/[controller]")]
 [Authorize]
 public class AuthController : Controller {
+    private readonly IMediator _mediator;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IEmailSender _emailSender;
@@ -36,6 +40,7 @@ public class AuthController : Controller {
     private readonly IValidator<LoginRequest> _loginValidator;
 
     public AuthController(
+        IMediator mediator,
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IEmailSender emailSender,
@@ -50,6 +55,7 @@ public class AuthController : Controller {
         IValidator<VerifyFromProviderRequest> verifyFromProviderValidator,
         IValidator<SendCodeToProviderRequest> sendCodeToProviderValidator,
         IValidator<RegisterNewUserRequest> registerNewUserValidator) {
+        _mediator = mediator;
         _userManager = userManager;
         _signInManager = signInManager;
         _emailSender = emailSender;
@@ -374,31 +380,51 @@ public class AuthController : Controller {
             return BadRequest(response);
         }
 
-        var user = new ApplicationUser {
-            UserName = request.Email,
-            Email = request.Email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            PhoneNumber = request.PhoneNumber,
-            TwoFactorEnabled = true
-        };
-        var result = await _userManager.CreateAsync(user, request.Password);
-        if (result.Succeeded) {
-            _logger.LogInformation(3, "User created a new account with password.");
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            // Todo : handle new user emaqil confirmation / phone number confirmation
-            // var callbackUrl = Url.Action("ConfirmEmail", "Account", new {userId = user.Id, code},
-            //     protocol: HttpContext.Request.Scheme);
-            // await _emailSender.SendEmailAsync(request.Email, "Confirm your account",
-            //     $"Please confirm your account by clicking this link: <a href='{callbackUrl}'>link</a>");
-            if (automaticLogin) {
-                await _signInManager.SignInAsync(user, isPersistent: false);
-            }
+        LocateCountryResponse resultCountryResponse = null;
 
-            _logger.LogInformation(4, "User created a new account with password.");
-            response.Status = true;
-            response.UserId = user.Id;
-            return Ok(response);
+        try {
+            resultCountryResponse = await _mediator.Send(new LocateCountryRequest {
+                CountryId = int.Parse(request.CountryId)
+            });
+            if (!resultCountryResponse.IsFound) {
+                response.Errors.Add("Country not found");
+                return BadRequest(response);
+            }
+        }
+        catch (Exception e) {
+            _logger.LogError(e, "Error while locating country");
+            response.Errors.Add("Country not found");
+            return BadRequest(response);
+        }
+
+        if (resultCountryResponse is { IsFound: true, Record: not null }) {
+            var user = new ApplicationUser {
+                UserName = request.Email,
+                Email = request.Email,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                PhoneNumber = request.PhoneNumber,
+                Country = resultCountryResponse.Record,
+                TwoFactorEnabled = true
+            };
+            var result = await _userManager.CreateAsync(user, request.Password);
+            if (result.Succeeded) {
+                _logger.LogInformation(3, "User created a new account with password.");
+                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                // Todo : handle new user emaqil confirmation / phone number confirmation
+                // var callbackUrl = Url.Action("ConfirmEmail", "Account", new {userId = user.Id, code},
+                //     protocol: HttpContext.Request.Scheme);
+                // await _emailSender.SendEmailAsync(request.Email, "Confirm your account",
+                //     $"Please confirm your account by clicking this link: <a href='{callbackUrl}'>link</a>");
+                if (automaticLogin) {
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                }
+
+                _logger.LogInformation(4, "User created a new account with password.");
+                response.Status = true;
+                response.UserId = user.Id;
+                return Ok(response);
+            }
         }
 
         response.Errors = new List<string> {
