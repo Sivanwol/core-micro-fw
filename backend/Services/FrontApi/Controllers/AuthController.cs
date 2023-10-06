@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using LoginRequest = Infrastructure.Models.Account.LoginRequest;
+using RefreshTokenRequest = Infrastructure.Models.Account.RefreshTokenRequest;
 
 namespace FrontApi.Controllers;
 

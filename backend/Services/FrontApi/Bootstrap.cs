@@ -67,6 +67,7 @@ public class Bootstrap {
             services.AddValidatorsFromAssemblyContaining<RegisterUserValidator>();
             services.AddValidatorsFromAssemblyContaining<LoginUserValidator>();
             services.AddValidatorsFromAssemblyContaining<ResetPasswordValidator>();
+            services.AddValidatorsFromAssemblyContaining<RefreshTokenValidator>();
             services.AddValidatorsFromAssemblyContaining<SendCodeToProviderValidator>();
             services.AddValidatorsFromAssemblyContaining<SendCodeFromProviderValidator>();
 
