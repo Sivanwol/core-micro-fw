@@ -1,5 +1,3 @@
-using Application.Enums;
-
 namespace Application.Exceptions;
 
 public class EntityFoundException : BaseException {

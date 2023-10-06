@@ -1,6 +1,6 @@
 using Application.Exceptions;
-using Application.Responses.Common;
 using Domain.Context;
+using Infrastructure.Responses.Common;
 using MassTransit;
 using MediatR;
 using Processor.Consumers.IndexUser;

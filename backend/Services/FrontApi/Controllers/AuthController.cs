@@ -1,0 +1,431 @@
+using Domain.Entities;
+using IdentityModel.Client;
+using Infrastructure.Enums;
+using Infrastructure.Models.Account;
+using Infrastructure.Responses.Auth;
+using Infrastructure.Services.Auth;
+using Infrastructure.Services.Auth.Sender;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using LoginRequest = Infrastructure.Models.Account.LoginRequest;
+
+namespace FrontApi.Controllers;
+
+[Route("api/[controller]")]
+[Authorize]
+public class AuthController : Controller {
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly IEmailSender _emailSender;
+    private readonly ISmsSender _smsSender;
+    private readonly ILogger _logger;
+    private readonly IJwtAuthManager _jwtAuthManager;
+    private readonly IConfiguration _configuration;
+
+    public AuthController(
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
+        IEmailSender emailSender,
+        ISmsSender smsSender,
+        ILoggerFactory loggerFactory,
+        IJwtAuthManager jwtAuthManager,
+        IConfiguration configuration) {
+        _userManager = userManager;
+        _signInManager = signInManager;
+        _emailSender = emailSender;
+        _smsSender = smsSender;
+        _logger = loggerFactory.CreateLogger<AuthController>();
+        _configuration = configuration;
+        _jwtAuthManager = jwtAuthManager;
+    }
+
+    /// <summary>
+    /// will be called when user request to login
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost("login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Login(LoginRequest request) {
+        var result =
+            await _signInManager.PasswordSignInAsync(request.Email, request.Password, request.RememberMe,
+                lockoutOnFailure: false);
+        var loginResponse = new LoginResponse();
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        // user not found
+        if (user == null) {
+            _logger.LogWarning(2, "User account not found");
+            loginResponse.Error = "User account not found";
+            return Unauthorized(loginResponse);
+        }
+
+        loginResponse.UserId = user.Id;
+        // user account got disabled
+        if (result.IsNotAllowed) {
+            _logger.LogWarning(2, "User account is disabled - {UserId}", user.Id);
+            loginResponse.Error = "User account disabled";
+            return Unauthorized(loginResponse);
+        }
+
+        // user need two factor
+        if (result.RequiresTwoFactor) {
+            _logger.LogWarning(2, "User account required two way factor - {UserId}", user.Id);
+            loginResponse.Error = "User account required two way factor";
+            return Unauthorized(loginResponse);
+        }
+
+        // user locked out
+        if (result.IsLockedOut) {
+            _logger.LogWarning(2, "User account locked out - {UserId}", user.Id);
+            loginResponse.Error = "User account locked out";
+            loginResponse.RequeiredMFA = true;
+            return Unauthorized(loginResponse);
+        }
+
+        // bad password
+        if (!result.Succeeded) {
+            _logger.LogWarning(2, "Invalid login attempt - {UserId}", user.Id);
+            loginResponse.Error = "Invalid login attempt";
+            return Unauthorized(loginResponse);
+        }
+
+        _logger.LogInformation(1, "User logged in -  {UserId}", user.Id);
+        loginResponse.Status = true;
+        var claims = await _userManager.GetClaimsAsync(user);
+        loginResponse.Tokens = _jwtAuthManager.GenerateTokens(user.Email, claims, DateTime.Now);
+        loginResponse.UserId = user.Id;
+        return Ok(loginResponse);
+    }
+
+    /// <summary>
+    /// will be called when user request to logout
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<ActionResult> Logout() {
+        var userName = User.Identity?.Name;
+        await _signInManager.SignOutAsync();
+        _jwtAuthManager.RemoveRefreshTokenByUserName(userName);
+        _logger.LogInformation("User [{UserName}] logged out the system.", userName);
+        var loginResponse = new LoginResponse {
+            Status = true
+        };
+        return Ok(loginResponse);
+    }
+
+    /// <summary>
+    /// will be called when user forgot password and request to reset password link
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword(ForgetPasswordRequest request) {
+        var loginResponse = new LoginResponse();
+        if (!ModelState.IsValid) return BadRequest(loginResponse);
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user == null || !(await _userManager.IsEmailConfirmedAsync(user))) {
+            // Don't reveal that the user does not exist or is not confirmed
+            return Ok(loginResponse);
+        }
+
+        loginResponse.Status = true;
+        // TODO: handle of forget password logic
+        // For more information on how to enable account confirmation and password reset please
+        // visit https://go.microsoft.com/fwlink/?LinkID=532713
+        // var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+        // var callbackUrl = Url.Action("ResetPassword", "Account", new {userId = user.Id, code},
+        //     protocol: HttpContext.Request.Scheme);
+        // await _emailSender.SendEmailAsync(request.Email, "Reset Password",
+        //     $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
+        return Ok(loginResponse);
+    }
+
+    /// <summary>
+    /// will be called when user request to reset password
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest model) {
+        var loginResponse = new LoginResponse();
+        if (!ModelState.IsValid) return BadRequest(loginResponse);
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user == null) {
+            return BadRequest(loginResponse);
+        }
+
+        var result = await _userManager.ResetPasswordAsync(user, model.Code, model.Password);
+        if (result.Succeeded) {
+            loginResponse.Status = true;
+            return Ok(loginResponse);
+        }
+
+        _logger.LogError("User [{UserId}] failed to reset password. Errors: {ResultErrors}", user.Id, result.Errors);
+        loginResponse.Error = result.Errors.ToString();
+        return BadRequest(loginResponse);
+    }
+
+    /// <summary>
+    /// will be called when active access token is expired and need to be refreshed
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost("refresh-token")]
+    [Authorize]
+    public async Task<ActionResult> RefreshToken([FromBody] RefreshTokenRequest request) {
+        var loginResponse = new LoginResponse {
+            Status = true
+        };
+        try {
+            var userName = User.Identity?.Name;
+            _logger.LogInformation($"User [{userName}] is trying to refresh JWT token.");
+            if (string.IsNullOrWhiteSpace(request.RefreshToken)) {
+                loginResponse.Status = false;
+                loginResponse.Error = "Invalid client request";
+                return Unauthorized(loginResponse);
+            }
+
+            var accessToken = await HttpContext.GetTokenAsync("Bearer", "access_token");
+            var jwtResult = _jwtAuthManager.Refresh(request.RefreshToken, accessToken, DateTime.Now);
+            _logger.LogInformation($"User [{userName}] has refreshed JWT token.");
+
+            var user = await _userManager.FindByEmailAsync(userName);
+            loginResponse.Tokens = jwtResult;
+            loginResponse.UserId = user.Id;
+            return Ok(loginResponse);
+        }
+        catch (SecurityTokenException e) {
+            _logger.LogError("Invalid JWT token: {EMessage}", e.Message);
+            loginResponse.Status = false;
+            loginResponse.Error = e.Message;
+            return
+                Unauthorized(loginResponse); // return 401 so that the client side can redirect the user to login page
+        }
+    }
+
+    /// <summary>
+    /// will be called when user login request mfa access this will trigger the mfa code to be sent to user
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost("request-code")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RequestCode(SendCodeToProviderRequest request) {
+        var loginResponse = new LoginResponse();
+        if (!ModelState.IsValid) return BadRequest(loginResponse);
+        var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+        if (user == null) {
+            loginResponse.Error = "Unable to load two-factor authentication user.";
+            return BadRequest(loginResponse);
+        }
+
+        var providers = await _userManager.GetValidTwoFactorProvidersAsync(user);
+        var requestProvider = request.Provider == AuthProvidersMFA.SMS ? "Phone" : "Email";
+        if (!providers.Contains(requestProvider)) {
+            return BadRequest(loginResponse);
+        }
+
+        var code = await _userManager.GenerateTwoFactorTokenAsync(user, requestProvider);
+        if (string.IsNullOrWhiteSpace(code)) {
+            return BadRequest(loginResponse);
+        }
+
+        var message = "Your security code is: " + code;
+        switch (requestProvider) {
+            case "Email":
+                await _emailSender.SendEmailAsync(await _userManager.GetEmailAsync(user), "Security Code", message);
+                break;
+            case "Phone":
+                await _smsSender.SendSmsAsync(await _userManager.GetPhoneNumberAsync(user), message);
+                break;
+        }
+
+        loginResponse.Status = true;
+        return Ok(loginResponse);
+    }
+
+    /// <summary>
+    /// this will be called when user request to verify mfa code
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpGet("verify-code")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyCode(VerifyFromProviderRequest request) {
+        var loginResponse = new LoginResponse();
+        if (!ModelState.IsValid) return BadRequest(loginResponse);
+        var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(request.Code, true, request.RememberMe);
+        if (result.Succeeded) {
+            loginResponse.Status = true;
+            return Ok(loginResponse);
+        }
+
+        if (result.IsLockedOut) {
+            _logger.LogWarning(2, "User account locked out.");
+            loginResponse.Error = "User account locked out.";
+            return BadRequest(loginResponse);
+        }
+
+        loginResponse.Error = "Invalid code.";
+        return BadRequest(loginResponse);
+    }
+
+    /// <summary>
+    /// this will be called when user request to confirm email
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="code"></param>
+    /// <returns></returns>
+    [HttpGet("confirm-email")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ConfirmEmail(string userId, string code) {
+        var loginResponse = new LoginResponse();
+        if (userId == null || code == null) {
+            return BadRequest(loginResponse);
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) {
+            loginResponse.Error = $"Unable to load user with ID '{userId}'.";
+            return BadRequest(loginResponse);
+        }
+
+        var result = await _userManager.ConfirmEmailAsync(user, code);
+        if (result.Succeeded) {
+            loginResponse.Status = true;
+            return Ok(loginResponse);
+        }
+
+        loginResponse.Error = $"wrong code for confirming email for user with ID '{userId}':";
+        return BadRequest(loginResponse);
+    }
+
+    /// <summary>
+    /// this will be called when user request to register new account
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="automaticLogin">only for admin uses</param>
+    /// <returns></returns>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Register(RegisterNewUserRequest request, bool automaticLogin = false) {
+        var loginResponse = new LoginResponse();
+        if (!ModelState.IsValid) return BadRequest(loginResponse);
+        var user = new ApplicationUser {
+            UserName = request.Email,
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            PhoneNumber = request.PhoneNumber,
+            TwoFactorEnabled = true
+        };
+        var result = await _userManager.CreateAsync(user, request.Password);
+        if (result.Succeeded) {
+            _logger.LogInformation(3, "User created a new account with password.");
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            // Todo : handle new user emaqil confirmation / phone number confirmation
+            // var callbackUrl = Url.Action("ConfirmEmail", "Account", new {userId = user.Id, code},
+            //     protocol: HttpContext.Request.Scheme);
+            // await _emailSender.SendEmailAsync(request.Email, "Confirm your account",
+            //     $"Please confirm your account by clicking this link: <a href='{callbackUrl}'>link</a>");
+            if (automaticLogin) {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+            }
+
+            _logger.LogInformation(4, "User created a new account with password.");
+            loginResponse.Status = true;
+            loginResponse.UserId = user.Id;
+            return Ok(loginResponse);
+        }
+
+        AddErrors(result);
+        loginResponse.Error = result.Errors.ToString();
+        return BadRequest(loginResponse);
+    }
+
+
+    // TODO : implement this  the main idea took from https://github.com/dotnet-labs/JwtAuthDemo/blob/master/webapi/JwtAuthDemo/Controllers/AccountController.cs please rebuild it 
+    // [HttpPost("impersonation")]
+    // [Authorize(Roles = UserRoles.Admin)]
+    // public ActionResult Impersonate([FromBody] ImpersonationRequest request)
+    // {
+    //     var userName = User.Identity?.Name;
+    //     _logger.LogInformation($"User [{userName}] is trying to impersonate [{request.UserName}].");
+    //
+    //     var impersonatedRole = _userService.GetUserRole(request.UserName);
+    //     if (string.IsNullOrWhiteSpace(impersonatedRole))
+    //     {
+    //         _logger.LogInformation($"User [{userName}] failed to impersonate [{request.UserName}] due to the target user not found.");
+    //         return BadRequest($"The target user [{request.UserName}] is not found.");
+    //     }
+    //     if (impersonatedRole == UserRoles.Admin)
+    //     {
+    //         _logger.LogInformation($"User [{userName}] is not allowed to impersonate another Admin.");
+    //         return BadRequest("This action is not supported.");
+    //     }
+    //
+    //     var claims = new[]
+    //     {
+    //         new Claim(ClaimTypes.Name,request.UserName),
+    //         new Claim(ClaimTypes.Role, impersonatedRole),
+    //         new Claim("OriginalUserName", userName ?? string.Empty)
+    //     };
+    //
+    //     var jwtResult = _jwtAuthManager.GenerateTokens(request.UserName, claims, DateTime.Now);
+    //     _logger.LogInformation($"User [{request.UserName}] is impersonating [{request.UserName}] in the system.");
+    //     return Ok(new LoginResult
+    //     {
+    //         UserName = request.UserName,
+    //         Role = impersonatedRole,
+    //         OriginalUserName = userName,
+    //         AccessToken = jwtResult.AccessToken,
+    //         RefreshToken = jwtResult.RefreshToken.TokenString
+    //     });
+    // }
+
+    // TODO : implement this  the main idea took from https://github.com/dotnet-labs/JwtAuthDemo/blob/master/webapi/JwtAuthDemo/Controllers/AccountController.cs please rebuild it 
+    // [HttpPost("stop-impersonation")]
+    // public ActionResult StopImpersonation()
+    // {
+    //     var userName = User.Identity?.Name;
+    //     var originalUserName = User.FindFirst("OriginalUserName")?.Value;
+    //     if (string.IsNullOrWhiteSpace(originalUserName))
+    //     {
+    //         return BadRequest("You are not impersonating anyone.");
+    //     }
+    //     _logger.LogInformation($"User [{originalUserName}] is trying to stop impersonate [{userName}].");
+    //
+    //     var role = _userService.GetUserRole(originalUserName);
+    //     var claims = new[]
+    //     {
+    //         new Claim(ClaimTypes.Name,originalUserName),
+    //         new Claim(ClaimTypes.Role, role)
+    //     };
+    //
+    //     var jwtResult = _jwtAuthManager.GenerateTokens(originalUserName, claims, DateTime.Now);
+    //     _logger.LogInformation($"User [{originalUserName}] has stopped impersonation.");
+    //     return Ok(new LoginResult
+    //     {
+    //         UserName = originalUserName,
+    //         Role = role,
+    //         OriginalUserName = null,
+    //         AccessToken = jwtResult.AccessToken,
+    //         RefreshToken = jwtResult.RefreshToken.TokenString
+    //     });
+    // }
+    private void AddErrors(IdentityResult result) {
+        foreach (var error in result.Errors) {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+    }
+
+    private Task<ApplicationUser> GetCurrentUserAsync() {
+        return _userManager.GetUserAsync(HttpContext.User);
+    }
+}

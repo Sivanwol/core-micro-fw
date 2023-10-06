@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 namespace Domain.Entities;
 
 public class ApplicationUser : IdentityUser {
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
-    public DateTime DateOfBirth { get; set; }
+    [ProtectedPersonalData] public Countries Country { get; set; }
+    [PersonalData] public string FirstName { get; set; }
+    [PersonalData] public string LastName { get; set; }
 }

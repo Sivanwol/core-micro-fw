@@ -1,5 +1,5 @@
-using Application.Responses.Users;
 using Domain.Context;
+using Infrastructure.Responses.Processor.Users;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 

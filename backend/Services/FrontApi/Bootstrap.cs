@@ -5,7 +5,13 @@ using Domain.Context;
 using Domain.Entities;
 using HealthChecks.ApplicationStatus.DependencyInjection;
 using HealthChecks.UI.Client;
+using Infrastructure.Services.Auth.Sender;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Infrastructure.Services.Auth;
+using Infrastructure.Services.Auth.Models;
+using Infrastructure.Validators;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -25,6 +31,8 @@ public class Bootstrap {
         var useDockerConnection = Boolean.Parse(useDockerConnectionConfigValue);
         ActiveConnectionString =
             Configuration.GetConnectionString(useDockerConnection ? "DockerConnection" : "DbConnection");
+        ActiveMigratorConnectionString =
+            Configuration.GetConnectionString("MigratorDbConnection");
         Log.Information($"Connect to Db Domain: {ActiveConnectionString}");
     }
 
@@ -32,12 +40,34 @@ public class Bootstrap {
 
     public static IConfiguration Configuration { get; set; }
     public static string ActiveConnectionString { get; private set; }
+    public static string ActiveMigratorConnectionString { get; private set; }
 
     public void ConfigureServices(IServiceCollection services) {
         Log.Information("Start Configure Server");
         services.AddGenericServiceExtension(Configuration, () => {
             services.AddDbContext<DomainContext>(options => options.UseSqlServer(ActiveConnectionString));
             services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
+            services.Configure<SmsSettings>(c => {
+                c.AccountIdentification = Configuration["SmsSettings:AccountIdentification"];
+                c.AccountMessagingServiceSid = Configuration["SmsSettings:AccountMessagingServiceSid"];
+                c.AccountAuthToken = Configuration["SmsSettings:AccountAuthToken"];
+                c.AccountFrom = Configuration["SmsSettings:AccountFrom"];
+            });
+            services.Configure<EmailSettings>(c => {
+                c.ApiKey = Configuration["EmailSettings:ApiKey"];
+                c.SenderEmail = Configuration["EmailSettings:SenderEmail"];
+                c.SenderName = Configuration["EmailSettings:SenderName"];
+            });
+            services.Configure<JwtTokenConfig>(Configuration.GetSection("Jwt"));
+            services.AddTransient<IEmailSender, AuthMessageSender>();
+            services.AddTransient<ISmsSender, AuthMessageSender>();
+            services.AddScoped<IJwtAuthManager, JwtAuthManager>();
+            services.AddValidatorsFromAssemblyContaining<ForgetPasswordValidator>();
+            services.AddValidatorsFromAssemblyContaining<RegisterUserValidator>();
+            services.AddValidatorsFromAssemblyContaining<LoginUserValidator>();
+            services.AddValidatorsFromAssemblyContaining<ResetPasswordValidator>();
+            services.AddValidatorsFromAssemblyContaining<SendCodeToProviderValidator>();
+            services.AddValidatorsFromAssemblyContaining<SendCodeFromProviderValidator>();
         });
         if (Environment.IsDevelopment() || bool.Parse(Configuration["ENABLE_SWAGGER"] ?? "false")) {
             services.AddSwaggerExtension(Configuration, "Front Api Docs", "V1");
@@ -50,15 +80,17 @@ public class Bootstrap {
         });
         services.AddElasticsearch(Configuration);
         services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
-        // health checks registration
-        services.AddHealthChecks()
-            .AddSqlServer(ActiveConnectionString, name: "DomainConnection", tags: new[] { "db" })
-            .AddApplicationStatus();
-        services.AddHealthChecksUI().AddSqlServerStorage(ActiveConnectionString);
+        // health checks registration 
+        var DisabledHealthChecks = bool.Parse(Configuration["Disable_HealthCheck"] ?? "false");
+        if (!DisabledHealthChecks) { // we check if we want the health checks to be disabled (mostly in dev)
+            services.AddHealthChecks()
+                .AddSqlServer(ActiveConnectionString, name: "DomainConnection", tags: new[] { "db" })
+                .AddApplicationStatus();
+            services.AddHealthChecksUI().AddSqlServerStorage(ActiveMigratorConnectionString);
+        }
 
-        // auth registration
+        // auth configuration
         services.Configure<IdentityOptions>(options => {
-            options.SignIn.RequireConfirmedPhoneNumber = true;
             options.User.RequireUniqueEmail = true;
             options.Password.RequireDigit = true;
             options.Password.RequireLowercase = true;
@@ -76,10 +108,16 @@ public class Bootstrap {
             options.User.AllowedUserNameCharacters =
                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
         });
-
-
-        services.AddIdentityApiEndpoints<ApplicationUser>().AddEntityFrameworkStores<DomainContext>();
-        services.AddAuthentication();
+        // auth registration
+        services.AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<DomainContext>()
+            .AddSignInManager()
+            .AddDefaultTokenProviders();
+        services.AddAuthentication(o => {
+            o.DefaultScheme = IdentityConstants.ApplicationScheme;
+            o.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+        });
 
         services.AddAuthentication("Bearer").AddJwtBearer(o => {
             o.TokenValidationParameters = new TokenValidationParameters {
@@ -119,7 +157,7 @@ public class Bootstrap {
         app.UseAuthorization();
 
         app.UseEndpoints(endpoints => {
-            endpoints.MapGroup("/auth").MapIdentityApi<ApplicationUser>();
+            // endpoints.MapGroup("/auth").MapIdentityApi<ApplicationUser>();
             endpoints.MapControllers();
         });
     }

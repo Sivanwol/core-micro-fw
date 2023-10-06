@@ -1,8 +1,8 @@
-using Application.Responses.Common;
+using Infrastructure.Responses.Common;
 using MediatR;
 
-namespace Processor.Handlers.User.Create; 
+namespace Processor.Handlers.User.Create;
 
-public class CreateUserRequest: IRequest<InsertIdResponse> {
+public class CreateUserRequest : IRequest<InsertIdResponse> {
     public string Auth0Id { get; set; }
 }
