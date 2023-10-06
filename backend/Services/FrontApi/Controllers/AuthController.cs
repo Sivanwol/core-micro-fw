@@ -1,4 +1,6 @@
 using Domain.Entities;
+using FluentValidation;
+using FluentValidation.Results;
 using IdentityModel.Client;
 using Infrastructure.Enums;
 using Infrastructure.Models.Account;
@@ -24,6 +26,13 @@ public class AuthController : Controller {
     private readonly ILogger _logger;
     private readonly IJwtAuthManager _jwtAuthManager;
     private readonly IConfiguration _configuration;
+    private readonly IValidator<RegisterNewUserRequest> _registerNewUserValidator;
+    private readonly IValidator<ResetPasswordRequest> _resetPasswordValidator;
+    private readonly IValidator<RefreshTokenRequest> _refreshTokenValidator;
+    private readonly IValidator<VerifyFromProviderRequest> _verifyFromProviderValidator;
+    private readonly IValidator<ForgetPasswordRequest> _forgetPasswordValidator;
+    private readonly IValidator<SendCodeToProviderRequest> _sendCodeToProviderValidator;
+    private readonly IValidator<LoginRequest> _loginValidator;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
@@ -32,7 +41,14 @@ public class AuthController : Controller {
         ISmsSender smsSender,
         ILoggerFactory loggerFactory,
         IJwtAuthManager jwtAuthManager,
-        IConfiguration configuration) {
+        IConfiguration configuration,
+        IValidator<ResetPasswordRequest> resetPasswordValidator,
+        IValidator<ForgetPasswordRequest> forgetPasswordValidator,
+        IValidator<LoginRequest> loginValidator,
+        IValidator<RefreshTokenRequest> refreshTokenValidator,
+        IValidator<VerifyFromProviderRequest> verifyFromProviderValidator,
+        IValidator<SendCodeToProviderRequest> sendCodeToProviderValidator,
+        IValidator<RegisterNewUserRequest> registerNewUserValidator) {
         _userManager = userManager;
         _signInManager = signInManager;
         _emailSender = emailSender;
@@ -40,6 +56,13 @@ public class AuthController : Controller {
         _logger = loggerFactory.CreateLogger<AuthController>();
         _configuration = configuration;
         _jwtAuthManager = jwtAuthManager;
+        _registerNewUserValidator = registerNewUserValidator;
+        _resetPasswordValidator = resetPasswordValidator;
+        _forgetPasswordValidator = forgetPasswordValidator;
+        _loginValidator = loginValidator;
+        _sendCodeToProviderValidator = sendCodeToProviderValidator;
+        _refreshTokenValidator = refreshTokenValidator;
+        _verifyFromProviderValidator = verifyFromProviderValidator;
     }
 
     /// <summary>
@@ -50,54 +73,61 @@ public class AuthController : Controller {
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> Login(LoginRequest request) {
+        var response = new AuthResponse();
+        var validator = await _loginValidator.ValidateAsync(request);
+        if (!validator.IsValid) {
+            response.Errors = HandlerErrorResponse(validator);
+            return BadRequest(response);
+        }
+
         var result =
             await _signInManager.PasswordSignInAsync(request.Email, request.Password, request.RememberMe,
                 lockoutOnFailure: false);
-        var loginResponse = new LoginResponse();
         var user = await _userManager.FindByEmailAsync(request.Email);
         // user not found
         if (user == null) {
             _logger.LogWarning(2, "User account not found");
-            loginResponse.Error = "User account not found";
-            return Unauthorized(loginResponse);
+            response.Errors.Add("User not found or password is not correct");
+            return Unauthorized(response);
         }
 
-        loginResponse.UserId = user.Id;
+        response.UserId = user.Id;
         // user account got disabled
         if (result.IsNotAllowed) {
             _logger.LogWarning(2, "User account is disabled - {UserId}", user.Id);
-            loginResponse.Error = "User account disabled";
-            return Unauthorized(loginResponse);
+            response.Errors.Add("User account disabled");
+            return Unauthorized(response);
         }
 
         // user need two factor
         if (result.RequiresTwoFactor) {
             _logger.LogWarning(2, "User account required two way factor - {UserId}", user.Id);
-            loginResponse.Error = "User account required two way factor";
-            return Unauthorized(loginResponse);
+            response.Errors.Add("User account required two way factor");
+            response.RequeiredMFA = true;
+            return Unauthorized(response);
         }
 
         // user locked out
         if (result.IsLockedOut) {
             _logger.LogWarning(2, "User account locked out - {UserId}", user.Id);
-            loginResponse.Error = "User account locked out";
-            loginResponse.RequeiredMFA = true;
-            return Unauthorized(loginResponse);
+            response.Errors.Add("User account locked out");
+            response.LockedOut = true;
+            return Unauthorized(response);
         }
 
         // bad password
         if (!result.Succeeded) {
             _logger.LogWarning(2, "Invalid login attempt - {UserId}", user.Id);
-            loginResponse.Error = "Invalid login attempt";
-            return Unauthorized(loginResponse);
+            response.Errors.Add("User not found or password is not correct");
+            return Unauthorized(response);
         }
 
         _logger.LogInformation(1, "User logged in -  {UserId}", user.Id);
-        loginResponse.Status = true;
+        response.Status = true;
         var claims = await _userManager.GetClaimsAsync(user);
-        loginResponse.Tokens = _jwtAuthManager.GenerateTokens(user.Email, claims, DateTime.Now);
-        loginResponse.UserId = user.Id;
-        return Ok(loginResponse);
+        response.Tokens = _jwtAuthManager.GenerateTokens(user.Email, claims, DateTime.Now);
+        response.UserId = user.Id;
+        return Ok(response);
     }
 
     /// <summary>
@@ -111,10 +141,10 @@ public class AuthController : Controller {
         await _signInManager.SignOutAsync();
         _jwtAuthManager.RemoveRefreshTokenByUserName(userName);
         _logger.LogInformation("User [{UserName}] logged out the system.", userName);
-        var loginResponse = new LoginResponse {
+        var response = new AuthResponse {
             Status = true
         };
-        return Ok(loginResponse);
+        return Ok(response);
     }
 
     /// <summary>
@@ -125,15 +155,15 @@ public class AuthController : Controller {
     [HttpPost("forgot-password")]
     [AllowAnonymous]
     public async Task<IActionResult> ForgotPassword(ForgetPasswordRequest request) {
-        var loginResponse = new LoginResponse();
-        if (!ModelState.IsValid) return BadRequest(loginResponse);
+        var response = new AuthResponse();
+        if (!ModelState.IsValid) return BadRequest(response);
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null || !(await _userManager.IsEmailConfirmedAsync(user))) {
             // Don't reveal that the user does not exist or is not confirmed
-            return Ok(loginResponse);
+            return Ok(response);
         }
 
-        loginResponse.Status = true;
+        response.Status = true;
         // TODO: handle of forget password logic
         // For more information on how to enable account confirmation and password reset please
         // visit https://go.microsoft.com/fwlink/?LinkID=532713
@@ -142,7 +172,7 @@ public class AuthController : Controller {
         //     protocol: HttpContext.Request.Scheme);
         // await _emailSender.SendEmailAsync(request.Email, "Reset Password",
         //     $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
-        return Ok(loginResponse);
+        return Ok(response);
     }
 
     /// <summary>
@@ -152,23 +182,30 @@ public class AuthController : Controller {
     /// <returns></returns>
     [HttpPost("reset-password")]
     [AllowAnonymous]
-    public async Task<IActionResult> ResetPassword(ResetPasswordRequest model) {
-        var loginResponse = new LoginResponse();
-        if (!ModelState.IsValid) return BadRequest(loginResponse);
-        var user = await _userManager.FindByEmailAsync(model.Email);
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request) {
+        var response = new AuthResponse();
+        var validator = await _resetPasswordValidator.ValidateAsync(request);
+        if (!validator.IsValid) {
+            response.Errors = HandlerErrorResponse(validator);
+            return BadRequest(response);
+        }
+
+        ;
+        var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null) {
-            return BadRequest(loginResponse);
+            return BadRequest(response);
         }
 
-        var result = await _userManager.ResetPasswordAsync(user, model.Code, model.Password);
+        var result = await _userManager.ResetPasswordAsync(user, request.Code, request.Password);
         if (result.Succeeded) {
-            loginResponse.Status = true;
-            return Ok(loginResponse);
+            response.Status = true;
+            return Ok(response);
         }
 
-        _logger.LogError("User [{UserId}] failed to reset password. Errors: {ResultErrors}", user.Id, result.Errors);
-        loginResponse.Error = result.Errors.ToString();
-        return BadRequest(loginResponse);
+        _logger.LogError("User [{UserId}] failed to reset password. Errors: {ResultErrors}", user.Id,
+            result.Errors.Select(s => s.Description).ToList());
+        response.Errors.Add("Error while reseting password");
+        return BadRequest(response);
     }
 
     /// <summary>
@@ -179,16 +216,19 @@ public class AuthController : Controller {
     [HttpPost("refresh-token")]
     [Authorize]
     public async Task<ActionResult> RefreshToken([FromBody] RefreshTokenRequest request) {
-        var loginResponse = new LoginResponse {
-            Status = true
-        };
+        var response = new AuthResponse();
+        var validator = await _refreshTokenValidator.ValidateAsync(request);
+        if (!validator.IsValid) {
+            response.Errors = HandlerErrorResponse(validator);
+            return BadRequest(response);
+        }
+
         try {
             var userName = User.Identity?.Name;
             _logger.LogInformation($"User [{userName}] is trying to refresh JWT token.");
             if (string.IsNullOrWhiteSpace(request.RefreshToken)) {
-                loginResponse.Status = false;
-                loginResponse.Error = "Invalid client request";
-                return Unauthorized(loginResponse);
+                response.Errors.Add("Invalid client request");
+                return Unauthorized(response);
             }
 
             var accessToken = await HttpContext.GetTokenAsync("Bearer", "access_token");
@@ -196,16 +236,16 @@ public class AuthController : Controller {
             _logger.LogInformation($"User [{userName}] has refreshed JWT token.");
 
             var user = await _userManager.FindByEmailAsync(userName);
-            loginResponse.Tokens = jwtResult;
-            loginResponse.UserId = user.Id;
-            return Ok(loginResponse);
+            response.Tokens = jwtResult;
+            response.UserId = user.Id;
+            response.Status = true;
+            return Ok(response);
         }
         catch (SecurityTokenException e) {
             _logger.LogError("Invalid JWT token: {EMessage}", e.Message);
-            loginResponse.Status = false;
-            loginResponse.Error = e.Message;
+            response.Errors.Add("Invalid JWT token");
             return
-                Unauthorized(loginResponse); // return 401 so that the client side can redirect the user to login page
+                Unauthorized(response); // return 401 so that the client side can redirect the user to login page
         }
     }
 
@@ -217,23 +257,28 @@ public class AuthController : Controller {
     [HttpPost("request-code")]
     [AllowAnonymous]
     public async Task<IActionResult> RequestCode(SendCodeToProviderRequest request) {
-        var loginResponse = new LoginResponse();
-        if (!ModelState.IsValid) return BadRequest(loginResponse);
+        var response = new AuthResponse();
+        var validator = await _sendCodeToProviderValidator.ValidateAsync(request);
+        if (!validator.IsValid) {
+            response.Errors = HandlerErrorResponse(validator);
+            return BadRequest(response);
+        }
+
         var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
         if (user == null) {
-            loginResponse.Error = "Unable to load two-factor authentication user.";
-            return BadRequest(loginResponse);
+            response.Errors.Add("Unable to load two-factor authentication user.");
+            return BadRequest(response);
         }
 
         var providers = await _userManager.GetValidTwoFactorProvidersAsync(user);
         var requestProvider = request.Provider == AuthProvidersMFA.SMS ? "Phone" : "Email";
         if (!providers.Contains(requestProvider)) {
-            return BadRequest(loginResponse);
+            return BadRequest(response);
         }
 
         var code = await _userManager.GenerateTwoFactorTokenAsync(user, requestProvider);
         if (string.IsNullOrWhiteSpace(code)) {
-            return BadRequest(loginResponse);
+            return BadRequest(response);
         }
 
         var message = "Your security code is: " + code;
@@ -246,8 +291,8 @@ public class AuthController : Controller {
                 break;
         }
 
-        loginResponse.Status = true;
-        return Ok(loginResponse);
+        response.Status = true;
+        return Ok(response);
     }
 
     /// <summary>
@@ -258,22 +303,27 @@ public class AuthController : Controller {
     [HttpGet("verify-code")]
     [AllowAnonymous]
     public async Task<IActionResult> VerifyCode(VerifyFromProviderRequest request) {
-        var loginResponse = new LoginResponse();
-        if (!ModelState.IsValid) return BadRequest(loginResponse);
+        var response = new AuthResponse();
+        var validator = await _verifyFromProviderValidator.ValidateAsync(request);
+        if (!validator.IsValid) {
+            response.Errors = HandlerErrorResponse(validator);
+            return BadRequest(response);
+        }
+
         var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(request.Code, true, request.RememberMe);
         if (result.Succeeded) {
-            loginResponse.Status = true;
-            return Ok(loginResponse);
+            response.Status = true;
+            return Ok(response);
         }
 
         if (result.IsLockedOut) {
             _logger.LogWarning(2, "User account locked out.");
-            loginResponse.Error = "User account locked out.";
-            return BadRequest(loginResponse);
+            response.Errors.Add("User account locked out.");
+            return BadRequest(response);
         }
 
-        loginResponse.Error = "Invalid code.";
-        return BadRequest(loginResponse);
+        response.Errors.Add("Invalid code.");
+        return BadRequest(response);
     }
 
     /// <summary>
@@ -285,25 +335,26 @@ public class AuthController : Controller {
     [HttpGet("confirm-email")]
     [AllowAnonymous]
     public async Task<IActionResult> ConfirmEmail(string userId, string code) {
-        var loginResponse = new LoginResponse();
+        var response = new AuthResponse();
         if (userId == null || code == null) {
-            return BadRequest(loginResponse);
+            response.Errors.Add("userId or code is null");
+            return BadRequest(response);
         }
 
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null) {
-            loginResponse.Error = $"Unable to load user with ID '{userId}'.";
-            return BadRequest(loginResponse);
+            response.Errors.Add($"Unable to load user with ID '{userId}'.");
+            return BadRequest(response);
         }
 
         var result = await _userManager.ConfirmEmailAsync(user, code);
         if (result.Succeeded) {
-            loginResponse.Status = true;
-            return Ok(loginResponse);
+            response.Status = true;
+            return Ok(response);
         }
 
-        loginResponse.Error = $"wrong code for confirming email for user with ID '{userId}':";
-        return BadRequest(loginResponse);
+        response.Errors.Add($"wrong code for confirming email for user with ID '{userId}'");
+        return BadRequest(response);
     }
 
     /// <summary>
@@ -315,8 +366,13 @@ public class AuthController : Controller {
     [HttpPost("register")]
     [AllowAnonymous]
     public async Task<IActionResult> Register(RegisterNewUserRequest request, bool automaticLogin = false) {
-        var loginResponse = new LoginResponse();
-        if (!ModelState.IsValid) return BadRequest(loginResponse);
+        var response = new AuthResponse();
+        var validator = await _registerNewUserValidator.ValidateAsync(request);
+        if (!validator.IsValid) {
+            response.Errors = HandlerErrorResponse(validator);
+            return BadRequest(response);
+        }
+
         var user = new ApplicationUser {
             UserName = request.Email,
             Email = request.Email,
@@ -339,14 +395,15 @@ public class AuthController : Controller {
             }
 
             _logger.LogInformation(4, "User created a new account with password.");
-            loginResponse.Status = true;
-            loginResponse.UserId = user.Id;
-            return Ok(loginResponse);
+            response.Status = true;
+            response.UserId = user.Id;
+            return Ok(response);
         }
 
-        AddErrors(result);
-        loginResponse.Error = result.Errors.ToString();
-        return BadRequest(loginResponse);
+        response.Errors = new List<string> {
+            "Error while creating user account"
+        };
+        return BadRequest(response);
     }
 
 
@@ -419,10 +476,8 @@ public class AuthController : Controller {
     //         RefreshToken = jwtResult.RefreshToken.TokenString
     //     });
     // }
-    private void AddErrors(IdentityResult result) {
-        foreach (var error in result.Errors) {
-            ModelState.AddModelError(string.Empty, error.Description);
-        }
+    private IList<string> HandlerErrorResponse(ValidationResult result) {
+        return result.Errors.Select(error => error.ErrorMessage).ToList();
     }
 
     private Task<ApplicationUser> GetCurrentUserAsync() {

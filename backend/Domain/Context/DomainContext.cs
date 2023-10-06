@@ -9,6 +9,8 @@ namespace Domain.Context;
 public class DomainContext : IdentityDbContext<ApplicationUser>, IDomainContext {
     public DbContext Instance => this;
 
+    public DbSet<Countries> Countries { get; set; }
+
     public DomainContext(DbContextOptions<DomainContext> options)
         : base(options) {
         Initialize();

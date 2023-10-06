@@ -44,6 +44,7 @@ public class Bootstrap {
 
     public void ConfigureServices(IServiceCollection services) {
         Log.Information("Start Configure Server");
+        var jwtTokenConfig = Configuration.GetSection("Jwt").Get<JwtTokenConfig>();
         services.AddGenericServiceExtension(Configuration, () => {
             services.AddDbContext<DomainContext>(options => options.UseSqlServer(ActiveConnectionString));
             services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
@@ -58,16 +59,18 @@ public class Bootstrap {
                 c.SenderEmail = Configuration["EmailSettings:SenderEmail"];
                 c.SenderName = Configuration["EmailSettings:SenderName"];
             });
-            services.Configure<JwtTokenConfig>(Configuration.GetSection("Jwt"));
+            services.AddSingleton(jwtTokenConfig);
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
-            services.AddScoped<IJwtAuthManager, JwtAuthManager>();
+            services.AddSingleton<IJwtAuthManager, JwtAuthManager>();
             services.AddValidatorsFromAssemblyContaining<ForgetPasswordValidator>();
             services.AddValidatorsFromAssemblyContaining<RegisterUserValidator>();
             services.AddValidatorsFromAssemblyContaining<LoginUserValidator>();
             services.AddValidatorsFromAssemblyContaining<ResetPasswordValidator>();
             services.AddValidatorsFromAssemblyContaining<SendCodeToProviderValidator>();
             services.AddValidatorsFromAssemblyContaining<SendCodeFromProviderValidator>();
+
+            services.AddHostedService<JwtRefreshTokenCache>();
         });
         if (Environment.IsDevelopment() || bool.Parse(Configuration["ENABLE_SWAGGER"] ?? "false")) {
             services.AddSwaggerExtension(Configuration, "Front Api Docs", "V1");
@@ -119,16 +122,18 @@ public class Bootstrap {
             o.DefaultSignInScheme = IdentityConstants.ExternalScheme;
         });
 
-        services.AddAuthentication("Bearer").AddJwtBearer(o => {
-            o.TokenValidationParameters = new TokenValidationParameters {
+        services.AddAuthentication("Bearer").AddJwtBearer(x => {
+            x.RequireHttpsMetadata = true;
+            x.SaveToken = true;
+            x.TokenValidationParameters = new TokenValidationParameters {
                 ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = false,
+                ValidIssuer = jwtTokenConfig.Issuer,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = Configuration["Jwt:Issuer"],
-                ValidAudience = Configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey
-                    (Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtTokenConfig.Secret)),
+                ValidAudience = jwtTokenConfig.Audience,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromMinutes(1)
             };
         });
     }

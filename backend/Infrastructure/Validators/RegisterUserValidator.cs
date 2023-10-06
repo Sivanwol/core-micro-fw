@@ -62,5 +62,9 @@ public class RegisterUserValidator : AbstractValidator<RegisterNewUserRequest> {
             .WithMessage("Phone number must not exceed 15 characters")
             .Matches(@"^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$")
             .WithMessage("Phone number is not valid");
+
+        RuleFor(x => x.CountryId)
+            .NotEmpty()
+            .WithMessage("Country Id is required");
     }
 }
