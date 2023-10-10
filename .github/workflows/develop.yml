@@ -14,9 +14,14 @@ jobs:
       - name: Run CI
         run: |
           echo "CI is running"
-  dotnet-setup:
+  front-api-service:
     runs-on: ubuntu-latest
-    name: Setup .NET
+    name: Front Api Validation & Build
+    needs: []
+    #    strategy:dotnet-setup
+    #      matrix:
+    #        projectPaths:
+    #          - "Service-Tests"
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET
@@ -24,18 +29,6 @@ jobs:
         with:
           dotnet-version: 8
           dotnet-quality: "preview"
-  front-api-service:
-    runs-on: ubuntu-latest
-    name: Front Api Validation & Build
-    needs: [dotnet-setup]
-    #    strategy:
-    #      matrix:
-    #        projectPaths:
-    #          - "Service-Tests"
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       # build and compile
       - name: Restore dependencies
         run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet restore
