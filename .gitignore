@@ -9,3 +9,4 @@ docker-data
 Thumbs.db
 *.log
 *.DotSettings.user
+global.json
