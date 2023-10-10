@@ -1,8 +1,6 @@
-using Application.Responses.Users;
+using Infrastructure.Responses.Processor.Users;
 using MediatR;
 
-namespace Processor.Handlers.User.List; 
+namespace Processor.Handlers.User.List;
 
-public class ListUsersRequest : IRequest<List<ListUserResponse>> {
-    
-}
+public class ListUsersRequest : IRequest<List<ListUserResponse>> { }

@@ -13,7 +13,6 @@ public class Bootstrap {
     public Bootstrap(IConfiguration configuration, IWebHostEnvironment env) {
         Configuration = configuration;
         Environment = env;
-        Domain = $"https://{Configuration["Auth0:Domain"]}/";
         var useDockerConnectionConfigValue = Configuration["ExtractDockerConnection"] ?? "false";
         var useDockerConnection = Boolean.Parse(useDockerConnectionConfigValue);
         ActiveConnectionString =
@@ -21,7 +20,6 @@ public class Bootstrap {
         Log.Information($"Connect to Db Domain: {ActiveConnectionString}");
     }
 
-    private static string Domain;
     public static IWebHostEnvironment Environment { get; set; }
 
     public static IConfiguration Configuration { get; set; }
@@ -30,7 +28,7 @@ public class Bootstrap {
     public void ConfigureServices(IServiceCollection services) {
         var useLocalRQ = Boolean.Parse(Configuration["ENABLE_SWAGGER"] ?? "false");
         Log.Information("Start Configure Server");
-        services.AddGenericServiceExtension(Configuration, Domain, () => {
+        services.AddGenericServiceExtension(Configuration, () => {
             services.AddDbContext<DomainContext>(options => options.UseSqlServer(ActiveConnectionString));
             services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
         });

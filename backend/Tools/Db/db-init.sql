@@ -32,3 +32,8 @@ GO
 
 CREATE USER [developer] FOR LOGIN [developer] WITH DEFAULT_SCHEMA=[app]
 GO
+
+EXEC sp_addrolemember N'db_datareader', N'developer'
+GO
+EXEC sp_addrolemember N'db_datawriter', N'developer'
+GO
