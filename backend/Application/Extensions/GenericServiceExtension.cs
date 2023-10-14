@@ -43,6 +43,7 @@ public static class GenericServiceExtension {
         Log.Information("Pre Bind Configure Server");
         app.UseRouting();
         app.UseMiddleware<ErrorHandlingMiddleware>();
+        app.UseMiddleware<CorrelationMiddleware>();
 
         if (env.IsDevelopment()) {
             app.UseDeveloperExceptionPage();
