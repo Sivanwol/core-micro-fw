@@ -3,16 +3,15 @@ using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Processor.Consumers.IndexUser;
-using Processor.Handlers.User.List;
-using Processor.test.Common;
-
+using Processor.Services.User.List;
+using Test.Shared.Common;
 namespace Processor.test.Users;
 
 [TestFixture]
 public class UsersProcessTest : BaseTest {
     [SetUp]
     public void Setup() {
-        SetupTest("Users");
+        SetupTest("UsersProcessTest");
     }
 
     [Test]
@@ -50,8 +49,8 @@ public class UsersProcessTest : BaseTest {
                 UpdateTime = SystemClock.Now().DateTime
             });
 
-            Assert.True(await harness.Sent.Any<IndexUserRequest>());
-            Assert.True(await harness.Consumed.Any<IndexUserEvent>());
+            Assert.Equals(await harness.Sent.Any<IndexUserRequest>(), true);
+            Assert.Equals(await harness.Consumed.Any<IndexUserEvent>(), true);
         }
         catch (Exception exec) {
             var error = exec.Message;

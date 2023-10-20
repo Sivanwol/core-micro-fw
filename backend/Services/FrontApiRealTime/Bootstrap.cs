@@ -1,40 +1,45 @@
 using System.Reflection;
+using Application.Configs;
 using Application.Extensions;
 using Application.Utils;
-using Domain.Context;
+using Domain.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.FeatureManagement;
 using Processor.Consumers.IndexUser;
-using Processor.Handlers.User.Create;
-using Processor.Handlers.User.List;
+using Processor.Services.User.Create;
+using Processor.Services.User.List;
 using Serilog;
-
 namespace FrontApiRealTime;
 
 public class Bootstrap {
     public Bootstrap(IConfiguration configuration, IWebHostEnvironment env) {
         Configuration = configuration;
         Environment = env;
-        var useDockerConnectionConfigValue = Configuration["ExtractDockerConnection"] ?? "false";
-        var useDockerConnection = Boolean.Parse(useDockerConnectionConfigValue);
-        ActiveConnectionString =
-            Configuration.GetConnectionString(useDockerConnection ? "DockerConnection" : "DbConnection");
-        Log.Information($"Connect to Db Domain: {ActiveConnectionString}");
+        ActiveAzureConfigConnectionString = Configuration["AzureConfigConnectionString"]!;
+        ActiveConnectionString = Configuration.GetConnectionString("DomainConnection");
+        Log.Information($"Connect to Domain: {ActiveConnectionString}");
+        Log.Information($"Connect to Application Config: {ActiveAzureConfigConnectionString}");
     }
 
     public static IWebHostEnvironment Environment { get; set; }
 
     public static IConfiguration Configuration { get; set; }
-    public static string ActiveConnectionString { get; private set; }
+    public static string ActiveAzureConfigConnectionString { get; private set; }
+    public static string ActiveConnectionString { get; set; }
 
     public void ConfigureServices(IServiceCollection services) {
-        var useLocalRQ = Boolean.Parse(Configuration["ENABLE_SWAGGER"] ?? "false");
         Log.Information("Start Configure Server");
+        // Load configuration from Azure App Configuration
+        services.AddAzureAppConfiguration()
+            .AddFeatureManagement();
+        services.Configure<BackendRealtimeApplicationConfig>(Configuration.GetSection("ApplicationConfig"));
+        var applicationConfig = Configuration.GetSection("ApplicationConfig").Get<BackendRealtimeApplicationConfig>()!;
         services.AddGenericServiceExtension(Configuration, () => {
             services.AddDbContext<DomainContext>(options => options.UseSqlServer(ActiveConnectionString));
-            services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
+            services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>()!);
         });
-        if (Environment.IsDevelopment() || useLocalRQ) {
-            services.AddSwaggerExtension(Configuration, "Front Api Realtime Docs", "V1");
+        if (Environment.IsDevelopment() || applicationConfig.EnableSwagger) {
+            services.AddSwaggerExtension(applicationConfig, "Front Api Realtime Docs");
         }
 
         services.AddMediatR(configuration => {
@@ -42,14 +47,16 @@ public class Bootstrap {
             configuration.RegisterServicesFromAssemblyContaining(typeof(ListUsersRequest));
             configuration.RegisterServicesFromAssemblyContaining(typeof(CreateUserRequest));
         });
-        services.AddElasticsearch(Configuration);
-        services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
+        // services.AddElasticsearch(Configuration);
+        services.AddMassTransitExtension(applicationConfig, bus => {
+            bus.AddConsumer<IndexUserConsumerHandler>();
+        });
         services.AddHealthChecks().AddCheck<GeneralHealthCheck>("front_api_real_time_service");
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-        var useLocalRQ = Boolean.Parse(Configuration["ENABLE_SWAGGER"] ?? "false");
-        if (Environment.IsDevelopment() || useLocalRQ) {
+        var applicationConfig = Configuration.GetSection("ApplicationConfig").Get<BackendRealtimeApplicationConfig>()!;
+        if (Environment.IsDevelopment() || applicationConfig.EnableSwagger) {
             app.UseSwaggerExtension(env);
         }
 

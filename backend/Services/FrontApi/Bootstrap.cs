@@ -1,99 +1,67 @@
 using System.Reflection;
 using System.Text;
+using Application.Configs;
 using Application.Extensions;
-using Domain.Context;
 using Domain.Entities;
+using Domain.Persistence.Context;
+using Domain.Persistence.Extensions;
+using FluentValidation;
+using FrontApi.HostedServices;
 using HealthChecks.ApplicationStatus.DependencyInjection;
 using HealthChecks.UI.Client;
-using Infrastructure.Services.Auth.Sender;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using FluentValidation;
-using Infrastructure.Requests.Processor.Countries;
+using Infrastructure.Requests.Processor.Services.Countries;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Auth.Models;
+using Infrastructure.Services.Auth.Sender;
 using Infrastructure.Validators;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.FeatureManagement;
 using Microsoft.IdentityModel.Tokens;
-using Processor.Consumers.IndexUser;
-using Processor.Handlers.User.Create;
-using Processor.Handlers.User.List;
+using Processor.Consumers.TestConsumer;
+using Processor.Services.User.Create;
+using Processor.Services.User.List;
 using Serilog;
-
 namespace FrontApi;
 
 public class Bootstrap {
     public Bootstrap(IConfiguration configuration, IWebHostEnvironment env) {
         Configuration = configuration;
         Environment = env;
-        var useDockerConnectionConfigValue = Configuration["ExtractDockerConnection"] ?? "false";
-        var useDockerConnection = Boolean.Parse(useDockerConnectionConfigValue);
-        ActiveConnectionString =
-            Configuration.GetConnectionString(useDockerConnection ? "DockerConnection" : "DbConnection");
-        ActiveMigratorConnectionString =
-            Configuration.GetConnectionString("MigratorDbConnection");
-        Log.Information($"Connect to Db Domain: {ActiveConnectionString}");
+        ActiveAzureConfigConnectionString = Configuration["AzureConfigConnectionString"]!;
+        ActiveConnectionString = Configuration.GetConnectionString("DomainConnection");
+        Log.Information($"Connect to Domain: {ActiveConnectionString}");
+        Log.Information($"Connect to Application Config: {ActiveAzureConfigConnectionString}");
     }
 
     public static IWebHostEnvironment Environment { get; set; }
 
     public static IConfiguration Configuration { get; set; }
-    public static string ActiveConnectionString { get; private set; }
-    public static string ActiveMigratorConnectionString { get; private set; }
+    public static string ActiveAzureConfigConnectionString { get; private set; }
+    public static string ActiveConnectionString { get; set; }
 
     public void ConfigureServices(IServiceCollection services) {
         Log.Information("Start Configure Server");
-        var jwtTokenConfig = Configuration.GetSection("Jwt").Get<JwtTokenConfig>();
-        services.AddGenericServiceExtension(Configuration, () => {
-            services.AddDbContext<DomainContext>(options => options.UseSqlServer(ActiveConnectionString));
-            services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
-            services.Configure<SmsSettings>(c => {
-                c.AccountIdentification = Configuration["SmsSettings:AccountIdentification"];
-                c.AccountMessagingServiceSid = Configuration["SmsSettings:AccountMessagingServiceSid"];
-                c.AccountAuthToken = Configuration["SmsSettings:AccountAuthToken"];
-                c.AccountFrom = Configuration["SmsSettings:AccountFrom"];
-            });
-            services.Configure<EmailSettings>(c => {
-                c.ApiKey = Configuration["EmailSettings:ApiKey"];
-                c.SenderEmail = Configuration["EmailSettings:SenderEmail"];
-                c.SenderName = Configuration["EmailSettings:SenderName"];
-            });
-            services.AddSingleton(jwtTokenConfig);
-            services.AddTransient<IEmailSender, AuthMessageSender>();
-            services.AddTransient<ISmsSender, AuthMessageSender>();
-            services.AddSingleton<IJwtAuthManager, JwtAuthManager>();
-            services.AddValidatorsFromAssemblyContaining<ForgetPasswordValidator>();
-            services.AddValidatorsFromAssemblyContaining<RegisterUserValidator>();
-            services.AddValidatorsFromAssemblyContaining<LoginUserValidator>();
-            services.AddValidatorsFromAssemblyContaining<ResetPasswordValidator>();
-            services.AddValidatorsFromAssemblyContaining<RefreshTokenValidator>();
-            services.AddValidatorsFromAssemblyContaining<SendCodeToProviderValidator>();
-            services.AddValidatorsFromAssemblyContaining<SendCodeFromProviderValidator>();
-
-            services.AddHostedService<JwtRefreshTokenCache>();
-        });
-        if (Environment.IsDevelopment() || bool.Parse(Configuration["ENABLE_SWAGGER"] ?? "false")) {
-            services.AddSwaggerExtension(Configuration, "Front Api Docs", "V1");
+        // Load configuration from Azure App Configuration
+        services.AddAzureAppConfiguration()
+            .AddFeatureManagement();
+        services.Configure<BackendApplicationConfig>(Configuration.GetSection("ApplicationConfig"));
+        var applicationConfig = Configuration.GetSection("ApplicationConfig").Get<BackendApplicationConfig>()!;
+        var jwtTokenConfig = new JwtTokenConfig {
+            Secret = applicationConfig.JwtSecret,
+            Issuer = applicationConfig.JwtIssuer,
+            Audience = applicationConfig.JwtAudience,
+            AccessTokenExpiration = applicationConfig.JwtAccessTokenExpired,
+            RefreshTokenExpiration = applicationConfig.JwtRefreshTokenExpired
+        };
+        if (!string.IsNullOrEmpty(applicationConfig.ConnectionString)) {
+            ActiveConnectionString = applicationConfig.ConnectionString;
+            Log.Information($"Change Domain Connection: {ActiveConnectionString}");
         }
-
-        services.AddMediatR(configuration => {
-            configuration.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
-            configuration.RegisterServicesFromAssemblyContaining(typeof(ListUsersRequest));
-            configuration.RegisterServicesFromAssemblyContaining<LocateCountryRequest>();
-            configuration.RegisterServicesFromAssemblyContaining(typeof(CreateUserRequest));
-        });
-        services.AddElasticsearch(Configuration);
-        services.AddMassTransitExtension(Configuration, bus => { bus.AddConsumer<IndexUserConsumerHandler>(); });
-        // health checks registration 
-        var DisabledHealthChecks = bool.Parse(Configuration["Disable_HealthCheck"] ?? "false");
-        if (!DisabledHealthChecks) { // we check if we want the health checks to be disabled (mostly in dev)
-            services.AddHealthChecks()
-                .AddSqlServer(ActiveConnectionString, name: "DomainConnection", tags: new[] { "db" })
-                .AddApplicationStatus();
-            services.AddHealthChecksUI().AddSqlServerStorage(ActiveMigratorConnectionString);
-        }
-
+        services.AddSingleton(jwtTokenConfig!);
+        services.AddSingleton(applicationConfig);
         // auth configuration
         services.Configure<IdentityOptions>(options => {
             options.User.RequireUniqueEmail = true;
@@ -113,6 +81,65 @@ public class Bootstrap {
             options.User.AllowedUserNameCharacters =
                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
         });
+        services.AddGenericServiceExtension(Configuration, () => {
+            services.AddDbContext<DomainContext>(options => options.UseSqlServer(ActiveConnectionString));
+            services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>()!);
+            // services.Configure<SmsSettings>(c => {
+            //     c.AccountIdentification = Configuration["SmsSettings:AccountIdentification"];
+            //     c.AccountMessagingServiceSid = Configuration["SmsSettings:AccountMessagingServiceSid"];
+            //     c.AccountAuthToken = Configuration["SmsSettings:AccountAuthToken"];
+            //     c.AccountFrom = Configuration["SmsSettings:AccountFrom"];
+            // });
+            // services.Configure<EmailSettings>(c => {
+            //     c.ApiKey = Configuration["EmailSettings:ApiKey"];
+            //     c.SenderEmail = Configuration["EmailSettings:SenderEmail"];
+            //     c.SenderName = Configuration["EmailSettings:SenderName"];
+            // });
+            services.AddTransient<IEmailSender, AuthMessageSender>();
+            services.AddTransient<ISmsSender, AuthMessageSender>();
+            services.AddSingleton<IJwtAuthManager, JwtAuthManager>();
+            services.AddValidatorsFromAssemblyContaining<ForgetPasswordValidator>();
+            services.AddValidatorsFromAssemblyContaining<RegisterUserValidator>();
+            services.AddValidatorsFromAssemblyContaining<LoginUserValidator>();
+            services.AddValidatorsFromAssemblyContaining<ResetPasswordValidator>();
+            services.AddValidatorsFromAssemblyContaining<RefreshTokenValidator>();
+            services.AddValidatorsFromAssemblyContaining<SendCodeToProviderValidator>();
+            services.AddValidatorsFromAssemblyContaining<SendCodeFromProviderValidator>();
+
+            services.AddHostedService<JwtRefreshTokenCache>();
+        });
+        if (Environment.IsDevelopment() || applicationConfig.EnableSwagger) {
+            services.AddSwaggerExtension(applicationConfig, "Front Api Docs");
+        }
+
+        services.AddMediatR(configuration => {
+            configuration.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
+            configuration.RegisterServicesFromAssemblyContaining(typeof(ListUsersRequest));
+            configuration.RegisterServicesFromAssemblyContaining<LocateCountryRequest>();
+            configuration.RegisterServicesFromAssemblyContaining(typeof(CreateUserRequest));
+        });
+        // enabled elastic search 
+        // services.AddElasticsearch(Configuration);
+        services.AddMassTransitExtension(applicationConfig, bus => {
+            // bus.AddConsumer<IndexUserConsumerHandler>();
+            bus.AddConsumer<TestConsumerHandler>();
+        }, c => {
+            services.AddHostedService<TestConsumerService>();
+        });
+        services.AddApiVersionExtension(applicationConfig);
+        // add repositories
+        services.AddRepositoriesExtension();
+        // add mocks services
+        services.AddMocksExtension();
+        // health checks registration 
+        if (applicationConfig.DisableHealthCheck) { // we check if we want the health checks to be disabled (mostly in dev)
+            services.AddHealthChecks()
+                .AddSqlServer(ActiveConnectionString, tags: new[] {
+                    "db"
+                })
+                .AddApplicationStatus();
+            services.AddHealthChecksUI().AddSqlServerStorage(ActiveConnectionString);
+        }
         // auth registration
         services.AddIdentityCore<ApplicationUser>()
             .AddRoles<IdentityRole>()
@@ -141,25 +168,29 @@ public class Bootstrap {
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-        if (Environment.IsDevelopment() || bool.Parse(Configuration["ENABLE_SWAGGER"] ?? "false")) {
+        var applicationConfig = Configuration.Get<BackendApplicationConfig>()!;
+        if (Environment.IsDevelopment() || applicationConfig.EnableSwagger) {
             app.UseSwaggerExtension(env);
         }
 
-        app.UseHealthChecks("/healthz", new HealthCheckOptions {
-            Predicate = _ => true,
-            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
-            ResultStatusCodes = {
-                [HealthStatus.Healthy] = StatusCodes.Status200OK,
-                [HealthStatus.Degraded] = StatusCodes.Status500InternalServerError,
-                [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable,
-            }
-        });
+        if (applicationConfig.DisableHealthCheck) {
+            app.UseHealthChecks("/healthz", new HealthCheckOptions {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+                ResultStatusCodes = {
+                    [HealthStatus.Healthy] = StatusCodes.Status200OK,
+                    [HealthStatus.Degraded] = StatusCodes.Status500InternalServerError,
+                    [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable,
+                }
+            });
+        }
 
         app.UseGenericServiceExtension(env, () => {
             if (!Environment.IsDevelopment()) {
                 app.UseHsts();
             }
         });
+        app.UseAzureAppConfiguration();
         app.UseAuthentication();
         app.UseAuthorization();
 

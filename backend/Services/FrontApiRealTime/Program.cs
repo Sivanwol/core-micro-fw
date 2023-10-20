@@ -1,7 +1,5 @@
-using Application.Utils;
 using Application.Extensions;
 using Serilog;
-
 namespace FrontApiRealTime;
 
 public class Program {
@@ -30,6 +28,21 @@ public class Program {
 
     private static IHostBuilder CreateHostBuilder(string[] args) => Host
         .CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(builder => builder.UseStartup<Bootstrap>())
+        .ConfigureWebHostDefaults(builder => {
+            builder.ConfigureAppConfiguration((context, config) => {
+                var connectionString = Environment.GetEnvironmentVariable("AzureConfigConnectionString");
+                var environmentLabel = Environment.GetEnvironmentVariable("EnvironmentLabel") ?? "local";
+                config.AddAzureAppConfiguration(ops => {
+                    ops.Connect(connectionString)
+                        .Select("BackendRealtime:*", environmentLabel)
+                        .ConfigureRefresh(refreshOptions => {
+                            refreshOptions.Register("BackendRealtime:Reload", true).SetCacheExpiration(TimeSpan.FromSeconds(5));
+                        })
+                        .TrimKeyPrefix("BackendRealtime:");
+                    ops.UseFeatureFlags();
+                });
+            });
+            builder.UseStartup<Bootstrap>();
+        })
         .UseSerilogExtenstion();
 }

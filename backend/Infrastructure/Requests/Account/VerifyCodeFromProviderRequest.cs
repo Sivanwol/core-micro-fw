@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Infrastructure.Enums;
-
-namespace Infrastructure.Models.Account;
+namespace Infrastructure.Requests.Account;
 
 public class VerifyFromProviderRequest {
     /// <summary>

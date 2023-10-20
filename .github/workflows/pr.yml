@@ -17,14 +17,37 @@ jobs:
       - name: Run CI
         run: |
           echo "CI is running"
+  
+  test-CI:
+    runs-on: ubuntu-latest
+    name: Test Runner
+    strategy:
+      matrix:
+        projectPaths:
+          - "Domain.Persistence.Test"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8
+          dotnet-quality: "preview"
+      # service tests
+      - name: Run Tests
+        run: |
+          for path in ${{ join( matrix.projectPaths , ' ')}} }}; do
+            echo "Tests Start for $path"
+            cd ${{ github.workspace }}/backend/$path && dotnet restore
+            cd ${{ github.workspace }}/backend/$path && dotnet build --no-restore
+            cd ${{ github.workspace }}/backend/$path && dotnet test --no-build --verbosity normal
+            echo "Tests Finished for $path"
+          done
   front-api-service:
     runs-on: ubuntu-latest
     name: Front Api Validation & Build
-    needs: []
-    #    strategy:dotnet-setup
-    #      matrix:
-    #        projectPaths:
-    #          - "Service-Tests"
+    needs: [ test-CI ]
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET
@@ -37,28 +60,6 @@ jobs:
         run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet restore
       - name: Build
         run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet build --no-restore
-  #  test-CI:
-  #    runs-on: ubuntu-latest
-  #    name: Test Runner
-  #    needs: [dotnet-setup]
-  #    strategy:
-  #      matrix:
-  #        projectPaths:
-  #          - "Service-Tests"
-  #    steps:
-  #      - uses: actions/checkout@v3
-  #        with:
-  #          fetch-depth: 0
-  #      # service tests
-  #      - name: Run Tests
-  #        run: |
-  #          for path in ${{ join( matrix.projectPaths , ' ')}} }}; do
-  #            echo "Tests Start for $path"
-  #            cd ${{ github.workspace }}/backend/$path && dotnet restore
-  #            cd ${{ github.workspace }}/backend/$path && dotnet build --no-restore
-  #            cd ${{ github.workspace }}/backend/$path && dotnet test --no-build --verbosity normal
-  #            echo "Tests Finished for $path"
-  #          done
   node-setup:
     runs-on: ubuntu-latest
     name: Setup Node

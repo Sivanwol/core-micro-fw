@@ -1,9 +1,7 @@
-using Infrastructure.Responses.Common;
 using Infrastructure.Services.Auth.Models;
-
 namespace Infrastructure.Responses.Auth;
 
-public class AuthResponse : DataResponse<AuthResponse> {
+public class AuthResponse {
     /// <summary>
     /// This property hold the jwt tokens
     /// </summary>

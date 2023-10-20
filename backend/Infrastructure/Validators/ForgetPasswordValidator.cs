@@ -1,6 +1,5 @@
 using FluentValidation;
-using Infrastructure.Models.Account;
-
+using Infrastructure.Requests.Account;
 namespace Infrastructure.Validators;
 
 public class ForgetPasswordValidator : AbstractValidator<ForgetPasswordRequest> {

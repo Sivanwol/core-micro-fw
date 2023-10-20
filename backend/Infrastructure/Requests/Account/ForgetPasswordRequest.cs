@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-
-namespace Infrastructure.Models.Account;
+namespace Infrastructure.Requests.Account;
 
 public class ForgetPasswordRequest {
     [Required] [EmailAddress] public string Email { get; set; }

@@ -1,8 +1,7 @@
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-
-namespace Application.Utils; 
+namespace Application.Utils;
 
 public static class ServicesLogger {
     public static Logger GetLogger(string serviceName) {
@@ -36,7 +35,7 @@ public static class ServicesLogger {
     }
 
     public static Logger GetLoggerTesting(string serviceName) {
-        
+
         return new LoggerConfiguration()
             .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)

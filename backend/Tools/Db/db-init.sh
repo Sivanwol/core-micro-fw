@@ -1,7 +1,7 @@
 #!/bin/bash
 #wait for the SQL Server to come up
 echo "padding init set up script"
-sleep 30s
+sleep 60s
 
 echo "running set up script"
 #run the setup script to create the DB and the schema in the DB

@@ -1,6 +1,5 @@
 using Application.Extensions;
 using Serilog;
-
 namespace FrontApi;
 
 public class Program {
@@ -15,7 +14,6 @@ public class Program {
             SerilogExtension.ProcessLogHandler("FrontApi", _getCurrentEnvironment ??= "development");
             Log.Information("Starting host...");
             CreateHostBuilder(args).Build().Run();
-            return 0;
         }
         catch (Exception e) {
             Log.Fatal("Host terminated unexpectedly: {Message}", e.Message);
@@ -25,10 +23,26 @@ public class Program {
             Log.Information("Server Shutting down...");
             Log.CloseAndFlush();
         }
+        return 0;
     }
 
     private static IHostBuilder CreateHostBuilder(string[] args) => Host
         .CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(builder => builder.UseStartup<Bootstrap>())
+        .ConfigureWebHostDefaults(builder => {
+            builder.ConfigureAppConfiguration((context, config) => {
+                var connectionString = Environment.GetEnvironmentVariable("AzureConfigConnectionString");
+                var environmentLabel = Environment.GetEnvironmentVariable("EnvironmentLabel") ?? "local";
+                config.AddAzureAppConfiguration(ops => {
+                    ops.Connect(connectionString)
+                        .Select("Backend:*", environmentLabel)
+                        .ConfigureRefresh(refreshOptions => {
+                            refreshOptions.Register("Backend:Reload", true).SetCacheExpiration(TimeSpan.FromSeconds(5));
+                        })
+                        .TrimKeyPrefix("Backend:");
+                    ops.UseFeatureFlags();
+                });
+            });
+            builder.UseStartup<Bootstrap>();
+        })
         .UseSerilogExtenstion();
 }

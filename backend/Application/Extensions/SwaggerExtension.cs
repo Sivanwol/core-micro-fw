@@ -1,20 +1,35 @@
+using Application.Configs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-
-namespace Application.Extensions; 
+namespace Application.Extensions;
 
 public static class SwaggerExtension {
 
-    public static void AddSwaggerExtension(this IServiceCollection services, IConfiguration configuration,
-        string applicationTitle, string version = "v1") {
-        // the documentation is only available in development or when the environment variable is set to true
+    public static void AddSwaggerExtension(this IServiceCollection services, DevopsApplicationConfig configuration, string applicationTitle) {
+        AddSwaggerGenSupport(services, $"v{configuration.APIMajorVersion}", applicationTitle);
+    }
+    public static void AddSwaggerExtension(this IServiceCollection services, BackendApplicationConfig configuration, string applicationTitle) {
+        AddSwaggerGenSupport(services, $"v{configuration.APIMajorVersion}", applicationTitle);
+    }
+    public static void AddSwaggerExtension(this IServiceCollection services, BackendRealtimeApplicationConfig configuration, string applicationTitle) {
+        AddSwaggerGenSupport(services, $"v{configuration.APIMajorVersion}", applicationTitle);
+    }
+    private static void AddSwaggerGenSupport(this IServiceCollection services, string version, string applicationTitle) {
         services.AddSwaggerGen(c => {
-            c.SwaggerDoc("v1", new() { Title = applicationTitle, Version = version });
+            c.IgnoreObsoleteActions();
+            c.EnableAnnotations();
+            c.SwaggerDoc(version, new() {
+                Title = applicationTitle,
+                Version = version,
+                Description = "This is the API documentation for the application",
+                Contact = new OpenApiContact {
+                    Name = "Sivan Wolberg",
+                    Email = "sivan@wolberg.pro",
+                    Url = new Uri("https://www.linkedin.com/in/swolberg/")
+                }
+            });
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
                 In = ParameterLocation.Header,
                 Description = "Please enter a valid token",

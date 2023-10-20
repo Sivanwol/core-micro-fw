@@ -1,6 +1,5 @@
 using Infrastructure.Enums;
-
-namespace Infrastructure.Models.Account;
+namespace Infrastructure.Requests.Account;
 
 public class SendCodeToProviderRequest {
     public AuthProvidersMFA Provider { get; set; }

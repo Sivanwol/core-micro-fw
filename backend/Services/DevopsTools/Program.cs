@@ -1,7 +1,5 @@
-using Application.Utils;
 using Application.Extensions;
 using Serilog;
-
 namespace DevopsTools;
 
 public class Program {
@@ -30,6 +28,21 @@ public class Program {
 
     private static IHostBuilder CreateHostBuilder(string[] args) => Host
         .CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(builder => builder.UseStartup<Bootstrap>())
+        .ConfigureWebHostDefaults(builder => {
+            builder.ConfigureAppConfiguration((context, config) => {
+                var connectionString = Environment.GetEnvironmentVariable("AzureConfigConnectionString");
+                var environmentLabel = Environment.GetEnvironmentVariable("EnvironmentLabel") ?? "local";
+                config.AddAzureAppConfiguration(ops => {
+                    ops.Connect(connectionString)
+                        .Select("Devops:*", environmentLabel)
+                        .ConfigureRefresh(refreshOptions => {
+                            refreshOptions.Register("Devops:Reload", true).SetCacheExpiration(TimeSpan.FromSeconds(5));
+                        })
+                        .TrimKeyPrefix("Devops:");
+                    ops.UseFeatureFlags();
+                });
+            });
+            builder.UseStartup<Bootstrap>();
+        })
         .UseSerilogExtenstion();
 }

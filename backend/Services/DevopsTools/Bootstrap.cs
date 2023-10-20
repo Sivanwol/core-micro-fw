@@ -1,47 +1,50 @@
+using Application.Configs;
 using Application.Extensions;
-using Application.Utils;
-using Domain.Context;
+using Domain.Persistence.Context;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.FeatureManagement;
 using Serilog;
-
 namespace DevopsTools;
 
 public class Bootstrap {
     public Bootstrap(IConfiguration configuration, IWebHostEnvironment env) {
         Configuration = configuration;
         Environment = env;
-        var useDockerConnectionConfigValue = Configuration["ExtractDockerConnection"] ?? "false";
-        var useDockerConnection = Boolean.Parse(useDockerConnectionConfigValue);
-        ActiveConnectionString =
-            Configuration.GetConnectionString(useDockerConnection ? "DockerConnection" : "DbConnection");
-        Log.Information($"Connect to Db Domain: {ActiveConnectionString}");
+        ActiveAzureConfigConnectionString = Configuration["AzureConfigConnectionString"]!;
+        ActiveConnectionString = Configuration.GetConnectionString("DomainConnection");
+        Log.Information($"Connect to Domain: {ActiveConnectionString}");
+        Log.Information($"Connect to Application Config: {ActiveAzureConfigConnectionString}");
     }
 
     public static IWebHostEnvironment Environment { get; set; }
 
     public static IConfiguration Configuration { get; set; }
-    public static string ActiveConnectionString { get; private set; }
+    public static string ActiveAzureConfigConnectionString { get; private set; }
+    public static string ActiveConnectionString { get; set; }
 
     public void ConfigureServices(IServiceCollection services) {
-        var useLocalRQ = Boolean.Parse(Configuration["ENABLE_SWAGGER"] ?? "false");
         Log.Information("Start Configure Server");
+        services.AddAzureAppConfiguration()
+            .AddFeatureManagement();
+        services.Configure<DevopsApplicationConfig>(Configuration.GetSection("ApplicationConfig"));
+        var applicationConfig = Configuration.GetSection("ApplicationConfig").Get<DevopsApplicationConfig>()!;
         services.AddGenericServiceExtension(Configuration, () => {
             services.AddDbContext<DomainContext>(options => options.UseSqlServer(ActiveConnectionString));
             services.AddTransient<IDomainContext>(provider => provider.GetService<DomainContext>());
         });
-        if (Environment.IsDevelopment() || useLocalRQ) {
-            services.AddSwaggerExtension(Configuration, "Devops Tools Docs", "V1");
+        if (Environment.IsDevelopment() || applicationConfig.EnableSwagger) {
+            services.AddSwaggerExtension(applicationConfig, "Devops Tools Docs");
         }
 
         services.AddHealthChecksUI().AddSqlServerStorage(ActiveConnectionString);
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-        var useLocalRQ = Boolean.Parse(Configuration["ENABLE_SWAGGER"] ?? "false");
-        if (Environment.IsDevelopment() || useLocalRQ) {
+        var applicationConfig = Configuration.GetSection("ApplicationConfig").Get<DevopsApplicationConfig>()!;
+        if (Environment.IsDevelopment() || applicationConfig.EnableSwagger) {
             app.UseSwaggerExtension(env);
         }
 

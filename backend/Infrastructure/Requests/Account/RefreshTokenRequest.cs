@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
-
-namespace Infrastructure.Models.Account;
+namespace Infrastructure.Requests.Account;
 
 public class RefreshTokenRequest {
     [JsonPropertyName("refreshToken")] public string RefreshToken { get; set; }
