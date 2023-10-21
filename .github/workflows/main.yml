@@ -22,14 +22,6 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true       # Disable sending .NET CLI telemetry
 
 jobs:
-  Run-CI:
-    runs-on: ubuntu-latest
-    name: CI Runner
-    needs: [ backend-api-service, frontend-platforms ]
-    steps:
-      - name: Run CI
-        run: |
-          echo "CI is running"
   
   projects-test-CI:
     runs-on: ubuntu-latest
