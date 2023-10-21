@@ -15,9 +15,9 @@ jobs:
         run: |
           echo "CI is running"
   
-  test-CI:
+  backend-test-CI:
     runs-on: ubuntu-latest
-    name: Test Runner
+    name: Backend Test Runner
     strategy:
       matrix:
         projectPaths:
@@ -44,7 +44,7 @@ jobs:
   backend-api-service:
     runs-on: ubuntu-latest
     name: Front Api Validation & Build
-    needs: [ test-CI ]
+    needs: [ backend-test-CI ]
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET
