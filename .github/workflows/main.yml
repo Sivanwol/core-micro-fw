@@ -51,7 +51,7 @@ jobs:
           done
 
   client-dashboard-platform:
-    runs-on: ubuntu-latest
+    runs-on: macos-11
     name: Client Dashboard Validation & Build
     needs: [ backend-api-service ]
     steps:
@@ -67,13 +67,10 @@ jobs:
           distribution: 'microsoft'
           java-version: '21'
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.1
-        with:
-          vs-prerelease: true
       - name: Install MAUI Workloads
         run: |
           dotnet workload install android --ignore-failed-sources
+          dotnet workload install wasm-tools --ignore-failed-sources
           dotnet workload install maui --ignore-failed-sources
       - name: Restore dependencies
         run: cd ${{ github.workspace }}/backend/Clients/Dashboard && dotnet restore
@@ -95,12 +92,6 @@ jobs:
           path: ${{ github.workspace }}/backend/Clients/Dashboard/bin/Release/*-ios/**/*.app/
       - name: Build Windows
         run: cd ${{ github.workspace }}/backend/Clients/Dashboard && msbuild Dashboard.csproj -r -p:Configuration=Release -p:RestorePackages=false /p:GenerateAppxPackageOnBuild=true
-      - name: Upload Windows Artifact
-        if: github.event.workflow_run.event != 'pull_request'
-        uses: actions/upload-artifact@v2.3.1
-        with:
-          name: windows-ci-build
-          path: ${{ github.workspace }}/backend/Clients/Dashboard/bin/Release/*-windows*/**/Dashboard*.msix
   backend-api-service:
     runs-on: ubuntu-latest
     name: Front Api Validation & Build
