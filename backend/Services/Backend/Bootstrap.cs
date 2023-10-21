@@ -2,11 +2,11 @@ using System.Reflection;
 using System.Text;
 using Application.Configs;
 using Application.Extensions;
+using Backend.HostedServices;
 using Domain.Entities;
 using Domain.Persistence.Context;
 using Domain.Persistence.Extensions;
 using FluentValidation;
-using FrontApi.HostedServices;
 using HealthChecks.ApplicationStatus.DependencyInjection;
 using HealthChecks.UI.Client;
 using Infrastructure.Requests.Processor.Services.Countries;
@@ -24,7 +24,7 @@ using Processor.Consumers.TestConsumer;
 using Processor.Services.User.Create;
 using Processor.Services.User.List;
 using Serilog;
-namespace FrontApi;
+namespace Backend;
 
 public class Bootstrap {
     public Bootstrap(IConfiguration configuration, IWebHostEnvironment env) {

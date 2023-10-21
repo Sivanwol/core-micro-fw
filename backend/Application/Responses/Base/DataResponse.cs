@@ -11,7 +11,7 @@ public class DataResponse<TObject> where TObject : class {
         Status = false;
         StatusCode = 400;
     }
-    public DataResponse(IList<string> errors) {
+    public DataResponse(List<string> errors) {
         Errors = errors;
         Status = false;
         StatusCode = 400;
@@ -30,7 +30,7 @@ public class DataResponse<TObject> where TObject : class {
     public int StatusCode { get; set; }
 
     [SwaggerSchema("Error messages")]
-    public IList<string> Errors { get; set; }
+    public List<string> Errors { get; set; }
 
     [SwaggerSchema("The data of response")]
     public TObject? Data { get; set; }

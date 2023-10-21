@@ -3,7 +3,7 @@ using Application.Configs;
 using Application.Utils.Service;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-namespace FrontApi.Controllers;
+namespace Backend.Controllers;
 
 public class MetaController : BaseApiController {
     public MetaController(IMediator _mediator, BackendApplicationConfig _configuration) : base(_mediator, _configuration) { }

@@ -1,6 +1,6 @@
 using Application.Extensions;
 using Serilog;
-namespace FrontApi;
+namespace Backend;
 
 public class Program {
     private static string? _getCurrentEnvironment;
@@ -11,7 +11,7 @@ public class Program {
 
     public static int Main(string[] args) {
         try {
-            SerilogExtension.ProcessLogHandler("FrontApi", _getCurrentEnvironment ??= "development");
+            SerilogExtension.ProcessLogHandler("Backend", _getCurrentEnvironment ??= "development");
             Log.Information("Starting host...");
             CreateHostBuilder(args).Build().Run();
         }

@@ -9,7 +9,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-namespace FrontApi.Controllers.v1;
+namespace Backend.Controllers.v1;
 
 [ApiVersion("1.0")]
 [Authorize]

@@ -2,7 +2,7 @@ using Application.Configs;
 using Application.Utils.Service;
 using Infrastructure.Requests.Processor.Consumers.TestConsumer;
 using MassTransit;
-namespace FrontApi.HostedServices;
+namespace Backend.HostedServices;
 
 public class TestConsumerService : BaseSchedulerSystem {
 
