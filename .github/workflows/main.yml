@@ -80,7 +80,7 @@ jobs:
           name: mac-ci-build
           path: ${{ github.workspace }}/backend/Clients/Dashboard/bin/Release/*-windows*/**/Dashboard*.msix
   client-dashboard-platform:
-    runs-on: macos-11
+    runs-on: macos-latest
     name: Client Dashboard Build Android, iOS, MAC
     needs: [ backend-api-service ]
     steps:
