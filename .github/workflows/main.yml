@@ -87,7 +87,6 @@ jobs:
       - name: Install MAUI Workloads
         run: |
           dotnet workload install android --ignore-failed-sources
-          dotnet workload install wasm-tools --ignore-failed-sources
           dotnet workload install maui --ignore-failed-sources
           dotnet workload install maccatalyst --ignore-failed-sources
       - name: Restore dependencies
