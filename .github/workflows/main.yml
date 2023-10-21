@@ -25,7 +25,6 @@ jobs:
   projects-test-CI:
     runs-on: ubuntu-latest
     name: Projects Test Runner
-    needs: [ setup-dotnet ]
     strategy:
       matrix:
         projectPaths:
