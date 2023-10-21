@@ -24,8 +24,8 @@
         <ApplicationTitle>Dashboard</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.dashboard</ApplicationId>
-
+        <ApplicationId>com.wolberg-pro.dashboard</ApplicationId>
+        <RuntimeIdentifiers  Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers>
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
         <ApplicationVersion>1</ApplicationVersion>
