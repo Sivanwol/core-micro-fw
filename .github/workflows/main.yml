@@ -22,19 +22,6 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true       # Disable sending .NET CLI telemetry
 
 jobs:
-
-  setup-dotnet:
-    runs-on: ubuntu-latest
-    name: Setup .NET
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 8
-          dotnet-quality: "preview"
   projects-test-CI:
     runs-on: ubuntu-latest
     name: Projects Test Runner
@@ -47,6 +34,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8
+          dotnet-quality: "preview"
       # service tests
       - name: Run Tests
         run: |
@@ -60,12 +52,17 @@ jobs:
   client-dashboard-platform-windows:
     runs-on: windows-latest
     name: Client Dashboard Validation & Build
-    needs: [ setup-dotnet, backend-api-service ]
+    needs: [ backend-api-service ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8
+          dotnet-quality: "preview"
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.1
         with:
@@ -73,12 +70,17 @@ jobs:
   client-dashboard-platform:
     runs-on: macos-11
     name: Client Dashboard Validation & Build
-    needs: [ setup-dotnet, backend-api-service ]
+    needs: [ backend-api-service ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8
+          dotnet-quality: "preview"
       - uses: actions/setup-java@v3
         with:
           distribution: 'microsoft'
@@ -118,12 +120,17 @@ jobs:
   backend-api-service:
     runs-on: ubuntu-latest
     name: Front Api Validation & Build
-    needs: [ setup-dotnet, projects-test-CI ]
+    needs: [ projects-test-CI ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8
+          dotnet-quality: "preview"
       # build and compile
       - name: Restore dependencies
         run: cd ${{ github.workspace }}/backend/Services/Backend && dotnet restore
