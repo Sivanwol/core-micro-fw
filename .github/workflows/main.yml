@@ -53,7 +53,7 @@ jobs:
   client-dashboard-platform:
     runs-on: ubuntu-latest
     name: Client Dashboard Validation & Build
-    needs: [ projects-test-CI ]
+    needs: [ backend-api-service ]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -62,7 +62,7 @@ jobs:
         with:
           dotnet-version: 8
           dotnet-quality: "preview"
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         with:
           distribution: 'microsoft'
           java-version: '21'
@@ -75,12 +75,12 @@ jobs:
         run: |
           dotnet workload install android --ignore-failed-sources
           dotnet workload install maui --ignore-failed-sources
-      # build and compile
       - name: Restore dependencies
         run: cd ${{ github.workspace }}/backend/Clients/Dashboard && dotnet restore
       - name: Build Android
         run: cd ${{ github.workspace }}/backend/Clients/Dashboard && dotnet build -c Release -f net8.0-android --no-restore
       - name: Upload Android Artifact
+        if: github.event.workflow_run.event != 'pull_request'
         uses: actions/upload-artifact@v2.3.1
         with:
           name: android-ci-build
@@ -88,6 +88,7 @@ jobs:
       - name: Build IOS
         run: cd ${{ github.workspace }}/backend/Clients/Dashboard && dotnet build -c Release -f net8.0-android --no-restore
       - name: Upload iOS Artifact
+        if: github.event.workflow_run.event != 'pull_request'
         uses: actions/upload-artifact@v2.3.1
         with:
           name: ios-ci-build
@@ -95,6 +96,7 @@ jobs:
       - name: Build Windows
         run: cd ${{ github.workspace }}/backend/Clients/Dashboard && msbuild Dashboard.csproj -r -p:Configuration=Release -p:RestorePackages=false /p:GenerateAppxPackageOnBuild=true
       - name: Upload Windows Artifact
+        if: github.event.workflow_run.event != 'pull_request'
         uses: actions/upload-artifact@v2.3.1
         with:
           name: windows-ci-build
