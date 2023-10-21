@@ -5,7 +5,7 @@ namespace Application.Utils;
 
 public static class ResponseHelper {
     public static IActionResult CreateResponse<TObject>(TObject data, HttpStatusCode statusCode = HttpStatusCode.OK) where TObject : class {
-        return CreateResponse<TObject>(data, new List<string>(), statusCode);
+        return CreateResponse(data, new List<string>(), statusCode);
     }
 
     public static IActionResult CreateResponse<TObject>(TObject data, List<string> errors, HttpStatusCode statusCode = HttpStatusCode.OK) where TObject : class {
