@@ -63,13 +63,12 @@ jobs:
           dotnet-version: 8
           dotnet-quality: "preview"
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v1.3
         with:
           vs-prerelease: true
       - name: Install MAUI Workloads
         run: |
           dotnet workload install maui --ignore-failed-sources
-          dotnet workload install maui-desktop --ignore-failed-sources
 
       - name: Build Windows
         run: cd ${{ github.workspace }}/backend/Clients/Dashboard && msbuild -r -p:Configuration=Release -p:TargetFramework=net8.0-windows10.0.19041 -p:RestorePackages=false /p:GenerateAppxPackageOnBuild=true
