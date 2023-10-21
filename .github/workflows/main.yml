@@ -22,14 +22,10 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true       # Disable sending .NET CLI telemetry
 
 jobs:
-  
-  projects-test-CI:
+
+  setup-dotnet:
     runs-on: ubuntu-latest
-    name: Projects Test Runner
-    strategy:
-      matrix:
-        projectPaths:
-          - "Domain.Persistence.Test"
+    name: Setup .NET
     steps:
       - uses: actions/checkout@v3
         with:
@@ -39,6 +35,18 @@ jobs:
         with:
           dotnet-version: 8
           dotnet-quality: "preview"
+  projects-test-CI:
+    runs-on: ubuntu-latest
+    name: Projects Test Runner
+    needs: [ setup-dotnet ]
+    strategy:
+      matrix:
+        projectPaths:
+          - "Domain.Persistence.Test"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       # service tests
       - name: Run Tests
         run: |
@@ -49,19 +57,28 @@ jobs:
             cd ${{ github.workspace }}/backend/$path && dotnet test --no-build --verbosity normal
             echo "Tests Finished for $path"
           done
-
+  client-dashboard-platform-windows:
+    runs-on: windows-latest
+    name: Client Dashboard Validation & Build
+    needs: [ setup-dotnet, backend-api-service ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          vs-prerelease: true
   client-dashboard-platform:
     runs-on: macos-11
     name: Client Dashboard Validation & Build
-    needs: [ backend-api-service ]
+    needs: [ setup-dotnet, backend-api-service ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/checkout@v3
         with:
-          dotnet-version: 8
-          dotnet-quality: "preview"
+          fetch-depth: 0
       - uses: actions/setup-java@v3
         with:
           distribution: 'microsoft'
@@ -72,6 +89,7 @@ jobs:
           dotnet workload install android --ignore-failed-sources
           dotnet workload install wasm-tools --ignore-failed-sources
           dotnet workload install maui --ignore-failed-sources
+          dotnet workload install maccatalyst --ignore-failed-sources
       - name: Restore dependencies
         run: cd ${{ github.workspace }}/backend/Clients/Dashboard && dotnet restore
       - name: Build Android
@@ -90,19 +108,23 @@ jobs:
         with:
           name: ios-ci-build
           path: ${{ github.workspace }}/backend/Clients/Dashboard/bin/Release/*-ios/**/*.app/
-      - name: Build Windows
-        run: cd ${{ github.workspace }}/backend/Clients/Dashboard && msbuild Dashboard.csproj -r -p:Configuration=Release -p:RestorePackages=false /p:GenerateAppxPackageOnBuild=true
+      - name: Build MAC
+        run: cd ${{ github.workspace }}/backend/Clients/Dashboard && dotnet build -c Release -f net8.0-maccatalyst --no-restore
+      - name: Upload MAC Artifact
+        if: github.event.workflow_run.event != 'pull_request'
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: mac-ci-build
+          path: ${{ github.workspace }}/backend/Clients/Dashboard/bin/Release/*-maccatalyst/**/*.app/
   backend-api-service:
     runs-on: ubuntu-latest
     name: Front Api Validation & Build
-    needs: [ projects-test-CI ]
+    needs: [ setup-dotnet, projects-test-CI ]
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
-          dotnet-version: 8
-          dotnet-quality: "preview"
+          fetch-depth: 0
       # build and compile
       - name: Restore dependencies
         run: cd ${{ github.workspace }}/backend/Services/Backend && dotnet restore
