@@ -50,7 +50,7 @@ jobs:
           done
   client-dashboard-platform-windows:
     runs-on: windows-latest
-    name: Client Dashboard Validation & Build
+    name: Client Dashboard Build Windows
     needs: [ backend-api-service ]
     steps:
       - name: Checkout
@@ -68,7 +68,7 @@ jobs:
           vs-prerelease: true
   client-dashboard-platform:
     runs-on: macos-11
-    name: Client Dashboard Validation & Build
+    name: Client Dashboard Build Android, iOS, MAC
     needs: [ backend-api-service ]
     steps:
       - name: Checkout
