@@ -9,7 +9,7 @@ jobs:
   Run-CI:
     runs-on: ubuntu-latest
     name: CI Runner
-    needs: [front-api-service, frontend-platforms]
+    needs: [ backend-api-service, frontend-platforms ]
     steps:
       - name: Run CI
         run: |
@@ -41,7 +41,7 @@ jobs:
             cd ${{ github.workspace }}/backend/$path && dotnet test --no-build --verbosity normal
             echo "Tests Finished for $path"
           done
-  front-api-service:
+  backend-api-service:
     runs-on: ubuntu-latest
     name: Front Api Validation & Build
     needs: [ test-CI ]
@@ -54,9 +54,9 @@ jobs:
           dotnet-quality: "preview"
       # build and compile
       - name: Restore dependencies
-        run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet restore
+        run: cd ${{ github.workspace }}/backend/Services/Backend && dotnet restore
       - name: Build
-        run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet build --no-restore
+        run: cd ${{ github.workspace }}/backend/Services/Backend && dotnet build --no-restore
   node-setup:
     runs-on: ubuntu-latest
     name: Setup Node
@@ -129,11 +129,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Extract metadata (tags, labels) for Docker on front api
+      - name: Extract metadata (tags, labels) for Docker on backend api
         id: backend-meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}_front_api
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}_backend_api
           labels: |
             maintainer=DockerBuilder
             org.opencontainers.image.title=front-api-build
@@ -148,9 +148,9 @@ jobs:
 
       # build and compile
       - name: Restore dependencies
-        run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet restore
+        run: cd ${{ github.workspace }}/backend/Services/Backend && dotnet restore
       - name: Build
-        run: cd ${{ github.workspace }}/backend/Services/FrontApi && dotnet build --no-restore
+        run: cd ${{ github.workspace }}/backend/Services/Backend && dotnet build --no-restore
       # build and push image
       - name: Build and push Docker image on Front Api
         uses: docker/build-push-action@v4
