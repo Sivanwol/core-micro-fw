@@ -1,10 +1,11 @@
+using Domain.Persistence.Mock.Services;
 using Domain.Persistence.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Test.Shared.Common;
-namespace Domain.Persistence.Test.Repositories;
+namespace Domain.Persistence.Test.Repositories; 
 
-public class CountriesRepositoryTest : BaseTest {
+public class CountriesRepositoryTest: BaseTest {
     protected ILoggerFactory factory;
     protected ILogger logger;
     [SetUp]
@@ -20,7 +21,7 @@ public class CountriesRepositoryTest : BaseTest {
 
     [Test]
     public async Task GetCountries() {
-        var countriesRepository = new CountriesRepository(Context.Object, factory);
+        var countriesRepository = new CountriesRepository(Context.Object, factory, new MockCountiesServices());
         var countries = await countriesRepository.GetAll();
         Assert.That(countries.Count(), Is.EqualTo(20));
     }

@@ -1,4 +1,5 @@
 using System.Reflection;
+using Application;
 using Application.Configs;
 using Application.Extensions;
 using Application.Utils;
@@ -7,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.FeatureManagement;
 using Processor.Consumers.IndexUser;
 using Processor.Services.User.Create;
-using Processor.Services.User.List;
 using Serilog;
 namespace FrontApiRealTime;
 
@@ -44,7 +44,7 @@ public class Bootstrap {
 
         services.AddMediatR(configuration => {
             configuration.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
-            configuration.RegisterServicesFromAssemblyContaining(typeof(ListUsersRequest));
+            // configuration.RegisterServicesFromAssemblyContaining(typeof(ListUsersRequest));
             configuration.RegisterServicesFromAssemblyContaining(typeof(CreateUserRequest));
         });
         // services.AddElasticsearch(Configuration);

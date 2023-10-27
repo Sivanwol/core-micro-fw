@@ -1,6 +1,7 @@
 using Domain.Entities;
-namespace Domain.Interfaces;
+namespace Domain.Interfaces.Mock; 
 
 public interface ICountiesMockService {
-    public List<Countries> GetCountries();
+    public IEnumerable<Countries> GetAll();
+    public Countries GetOne();
 }

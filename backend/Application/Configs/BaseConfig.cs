@@ -1,4 +1,4 @@
-namespace Application.Configs;
+namespace Application.Configs; 
 
 public abstract class BaseConfig {
     public bool IsTesting { get; set; }
@@ -6,4 +6,5 @@ public abstract class BaseConfig {
     public string ConnectionString { get; set; }
     public int APIMajorVersion { get; set; }
     public int APIMinorVersion { get; set; }
+    
 }

@@ -7,7 +7,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:5081",
         "EnvironmentLabel": "local",
-        "AzureConfigConnectionString": ""
+        "AzureConfigConnectionString": "Endpoint=https://developconfig.azconfig.io;Id=4Dql;Secret=OcZ1bcmOu8Irxt9LYIQeZSAMqnLW1bDR0QYWKI1PPNU="
       },
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:5081"
@@ -19,7 +19,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:5081",
         "EnvironmentLabel": "local",
-        "AzureConfigConnectionString": ""
+        "AzureConfigConnectionString": "Endpoint=https://developconfig.azconfig.io;Id=4Dql;Secret=OcZ1bcmOu8Irxt9LYIQeZSAMqnLW1bDR0QYWKI1PPNU="
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7219;http://localhost:5081"
@@ -31,7 +31,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:5081",
         "EnvironmentLabel": "local",
-        "AzureConfigConnectionString": ""
+        "AzureConfigConnectionString": "Endpoint=https://developconfig.azconfig.io;Id=4Dql;Secret=OcZ1bcmOu8Irxt9LYIQeZSAMqnLW1bDR0QYWKI1PPNU="
       }
     }
   },

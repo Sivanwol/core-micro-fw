@@ -42,6 +42,7 @@ public static class GenericServiceExtension {
         Action? moreConfigurationServices) {
         Log.Information("Pre Bind Configure Server");
         app.UseRouting();
+        app.UseSerilogRequestLogging();
         app.UseMiddleware<ErrorHandlingMiddleware>();
         app.UseMiddleware<CorrelationMiddleware>();
 

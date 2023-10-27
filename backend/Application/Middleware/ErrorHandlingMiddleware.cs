@@ -61,7 +61,7 @@ public class ErrorHandlingMiddleware {
                 break;
         }
         // use ILogger to log the exception message
-        _logger.LogError(error.Message);
+        _logger.LogError(error.Message, error.StackTrace);
         var result = JsonSerializer.Serialize(responseModel);
         await response.WriteAsync(result);
     }

@@ -1,5 +1,7 @@
+using Application.Utils;
 using Application.Extensions;
 using Serilog;
+
 namespace DevopsTools;
 
 public class Program {

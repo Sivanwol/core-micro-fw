@@ -1,6 +1,6 @@
-using Domain.Entities;
-namespace Domain.Interfaces;
+namespace Domain.Interfaces; 
 
-public interface IGenericRepository<T> where T : class {
-    Task<Countries?> GetById(int id);
+public interface IGenericRepository<T> where T : class
+{
+    Task<T> GetById(int id);
 }

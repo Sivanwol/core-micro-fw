@@ -5,6 +5,7 @@ namespace Application.Utils.Service;
 
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
+[Produces("application/json")]
 public abstract class BaseApiController : ControllerBase {
     protected BackendApplicationConfig Configuration;
     protected IMediator Mediator;

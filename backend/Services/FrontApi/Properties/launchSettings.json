@@ -1,0 +1,72 @@
+﻿{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:58286",
+      "sslPort": 44362
+    }
+  },
+  "hotReloadEnabled": true,
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "launchUrl": "",
+      "applicationUrl": "http://localhost:3000",
+      "environmentVariables": {
+        "HOME": "./",
+        "AzureHost": "false",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:3000",
+        "EnvironmentLabel": "local",
+        "AzureConfigConnectionString": "Endpoint=https://developconfig.azconfig.io;Id=4Dql;Secret=OcZ1bcmOu8Irxt9LYIQeZSAMqnLW1bDR0QYWKI1PPNU="
+      }
+    },
+    "http_prod": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "launchUrl": "",
+      "applicationUrl": "http://localhost:3000",
+      "environmentVariables": {
+        "HOME": "./",
+        "AzureHost": "false",
+        "ASPNETCORE_ENVIRONMENT": "Production",
+        "ASPNETCORE_URLS": "http://localhost:3000",
+        "EnvironmentLabel": "local",
+        "AzureConfigConnectionString": "Endpoint=https://developconfig.azconfig.io;Id=4Dql;Secret=OcZ1bcmOu8Irxt9LYIQeZSAMqnLW1bDR0QYWKI1PPNU="
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "launchUrl": "",
+      "applicationUrl": "https://localhost:7231;http://localhost:3000",
+      "environmentVariables": {
+        "HOME": "./",
+        "AzureHost": "false",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:3000",
+        "EnvironmentLabel": "local",
+        "AzureConfigConnectionString": "Endpoint=https://developconfig.azconfig.io;Id=4Dql;Secret=OcZ1bcmOu8Irxt9LYIQeZSAMqnLW1bDR0QYWKI1PPNU="
+      }
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": false,
+      "launchUrl": "",
+      "environmentVariables": {
+        "HOME": "./",
+        "AzureHost": "false",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:3000",
+        "EnvironmentLabel": "local",
+        "AzureConfigConnectionString": "Endpoint=https://developconfig.azconfig.io;Id=4Dql;Secret=OcZ1bcmOu8Irxt9LYIQeZSAMqnLW1bDR0QYWKI1PPNU="
+      }
+    }
+  }
+}

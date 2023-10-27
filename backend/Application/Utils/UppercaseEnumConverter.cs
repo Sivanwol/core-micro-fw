@@ -1,4 +1,7 @@
+using System;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
 namespace Application.Utils;
 
 public class UppercaseEnumConverter<TEnum> : ValueConverter<TEnum, string>

@@ -8,19 +8,15 @@ using Microsoft.Extensions.Logging;
 namespace Processor.Services.Countries.Base;
 
 public class LocateHandler : IRequestHandler<LocateCountryRequest, LocateCountryResponse> {
-    private readonly IBus _bus;
     private readonly ILogger _logger;
-    private readonly IMediator _mediator;
     private readonly ICountriesRepository _repository;
+    private readonly IMediator _mediator;
     public LocateHandler(
         IMediator mediator,
-        IDomainContext context,
         ILoggerFactory loggerFactory,
-        ICountriesRepository repository,
-        IBus bus) {
+        ICountriesRepository repository) {
         _mediator = mediator;
         _repository = repository;
-        _bus = bus;
         _logger = loggerFactory.CreateLogger<LocateHandler>();
     }
 

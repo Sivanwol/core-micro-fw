@@ -18,11 +18,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Domain.Persistence\Domain.Persistence.csproj"/>
+        <ProjectReference Include="..\Domain.Persistence\Domain.Persistence.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Requests\Processor\Services\"/>
+        <Folder Include="Requests\Account\" />
+        <Folder Include="Responses\Backoffice\" />
         <Folder Include="Responses\Processor\Services\"/>
     </ItemGroup>
 
