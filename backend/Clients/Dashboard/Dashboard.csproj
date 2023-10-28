@@ -57,10 +57,19 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="AntDesign" Version="0.16.0"/>
+        <PackageReference Include="CommunityToolkit.Maui" Version="6.0.0"/>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2"/>
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0-rc.2.23479.6"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="CommunityToolkit.Maui">
+            <HintPath>..\..\..\..\..\.nuget\packages\communitytoolkit.maui\6.0.0\lib\net7.0-android33.0\CommunityToolkit.Maui.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <!--    <ItemGroup>-->

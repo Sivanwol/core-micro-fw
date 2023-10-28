@@ -1,4 +1,5 @@
-﻿using Dashboard.Data;
+﻿using CommunityToolkit.Maui;
+using Dashboard.Data;
 using Microsoft.Extensions.Logging;
 namespace Dashboard;
 
@@ -7,6 +8,7 @@ public static class MauiProgram {
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseMauiCommunityToolkit()
             .ConfigureFonts(fonts => {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
             });
