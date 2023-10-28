@@ -21,7 +21,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Annotations;
-namespace FrontApi.Controllers.v1.Backoffice;
+namespace BackendApi.Controllers.v1.Backoffice;
 
 [ApiVersion("1.0")]
 [Authorize]
@@ -199,7 +199,7 @@ public class AuthController : BaseApiController {
                 "User not found."
             }, HttpStatusCode.BadRequest);
         }
-        
+
         if (request.Password == request.NewPassword) {
             return ResponseHelper.CreateEmptyResponse(new List<string> {
                 "New password must be different from old password."

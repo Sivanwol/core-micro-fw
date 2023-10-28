@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Text;
 using Application.Configs;
 using Application.Extensions;
@@ -8,8 +7,6 @@ using Domain.Persistence.Extensions;
 using FluentValidation;
 using HealthChecks.ApplicationStatus.DependencyInjection;
 using HealthChecks.UI.Client;
-using Infrastructure.Requests.Processor.Services.General;
-using Infrastructure.Requests.Processor.Services.User;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Auth.Models;
 using Infrastructure.Services.Auth.Sender;
@@ -22,7 +19,7 @@ using Microsoft.FeatureManagement;
 using Microsoft.IdentityModel.Tokens;
 using Processor.Consumers.TestConsumer;
 using Serilog;
-namespace FrontApi;
+namespace BackendApi;
 
 public class Bootstrap {
     public Bootstrap(IConfiguration configuration, IWebHostEnvironment env) {
@@ -112,7 +109,7 @@ public class Bootstrap {
         services.AddRepositoriesExtension();
         // add mocks services
         services.AddMocksExtension();
-        
+
         #region AddMediatR
 
         // services.AddMediatR(configuration => {
@@ -133,6 +130,7 @@ public class Bootstrap {
         });
 
         #endregion
+
         services.AddApiVersionExtension(applicationConfig);
         // health checks registration 
         if (applicationConfig.DisableHealthCheck) { // we check if we want the health checks to be disabled (mostly in dev)

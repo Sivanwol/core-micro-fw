@@ -10,8 +10,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.AspNetCore.Annotations;
-namespace FrontApi.Controllers.v1;
+namespace BackendApi.Controllers.v1;
 
 [ApiVersion("1.0")]
 [Authorize]
@@ -21,10 +20,10 @@ public class MobileAuthController : BaseApiController {
     private readonly IJwtAuthManager _jwtAuthManager;
     private readonly ILogger _logger;
     private readonly IValidator<MobileLoginUserRequest> _loginValidator;
+    private readonly IValidator<MobileRequestOTPUserRequest> _requestOTPValidator;
     private readonly ISmsSender _smsSender;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IValidator<VerifyFromProviderRequest> _verifyFromProviderValidator;
-    private readonly IValidator<MobileRequestOTPUserRequest> _requestOTPValidator;
 
     public MobileAuthController(
         IMediator mediator,

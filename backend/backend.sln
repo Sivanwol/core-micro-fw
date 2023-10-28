@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{7B5DED89-9E26-45CE-91F6-77D288B90143}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backend", "Services\Backend\Backend.csproj", "{3102590B-4BB2-4A2D-9816-9219DBF197F0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackendApi", "Services\BackendApi\BackendApi.csproj", "{3102590B-4BB2-4A2D-9816-9219DBF197F0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain.Persistence", "Domain.Persistence\Domain.Persistence.csproj", "{FA9C924B-9AE3-4D84-8534-2438AFBB8C1B}"
 EndProject

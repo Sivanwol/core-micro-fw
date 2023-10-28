@@ -22,7 +22,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:3000",
         "EnvironmentLabel": "local",
-        "AzureConfigConnectionString": "Endpoint=https://developconfig.azconfig.io;Id=4Dql;Secret=OcZ1bcmOu8Irxt9LYIQeZSAMqnLW1bDR0QYWKI1PPNU="
+        "AzureConfigConnectionString": ""
       }
     },
     "http_prod": {
@@ -37,7 +37,7 @@
         "ASPNETCORE_ENVIRONMENT": "Production",
         "ASPNETCORE_URLS": "http://localhost:3000",
         "EnvironmentLabel": "local",
-        "AzureConfigConnectionString": "Endpoint=https://developconfig.azconfig.io;Id=4Dql;Secret=OcZ1bcmOu8Irxt9LYIQeZSAMqnLW1bDR0QYWKI1PPNU="
+        "AzureConfigConnectionString": ""
       }
     },
     "https": {
@@ -52,7 +52,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:3000",
         "EnvironmentLabel": "local",
-        "AzureConfigConnectionString": "Endpoint=https://developconfig.azconfig.io;Id=4Dql;Secret=OcZ1bcmOu8Irxt9LYIQeZSAMqnLW1bDR0QYWKI1PPNU="
+        "AzureConfigConnectionString": ""
       }
     },
     "IIS Express": {
@@ -65,7 +65,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:3000",
         "EnvironmentLabel": "local",
-        "AzureConfigConnectionString": "Endpoint=https://developconfig.azconfig.io;Id=4Dql;Secret=OcZ1bcmOu8Irxt9LYIQeZSAMqnLW1bDR0QYWKI1PPNU="
+        "AzureConfigConnectionString": ""
       }
     }
   }

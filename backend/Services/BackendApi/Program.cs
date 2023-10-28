@@ -1,10 +1,6 @@
 using Application.Extensions;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Serilog;
-
-namespace FrontApi;
+namespace BackendApi;
 
 public class Program {
     private static string? _getCurrentEnvironment;
@@ -36,7 +32,7 @@ public class Program {
             builder.ConfigureAppConfiguration((context, config) => {
                 var connectionString = Environment.GetEnvironmentVariable("AzureConfigConnectionString");
                 var environmentLabel = Environment.GetEnvironmentVariable("EnvironmentLabel") ?? "local";
-                Log.Information("Fetching Config from cloud: {ConnectionString}, {environmentLabel}", connectionString,environmentLabel);
+                Log.Information("Fetching Config from cloud: {ConnectionString}, {environmentLabel}", connectionString, environmentLabel);
                 config.AddAzureAppConfiguration(ops => {
                     ops.Connect(connectionString)
                         .Select("Backend:*", environmentLabel)

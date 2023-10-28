@@ -9,7 +9,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
-namespace FrontApi.Controllers.v1;
+namespace BackendApi.Controllers.v1;
 
 [ApiVersion("1.0")]
 // [Authorize]
@@ -22,7 +22,7 @@ public class GeneralController : BaseApiController {
         ILoggerFactory loggerFactory,
         BackendApplicationConfig configuration
         // IValidator<MobileLoginUserRequest> loginValidator
-        ) : base(mediator, configuration) {
+    ) : base(mediator, configuration) {
         _logger = loggerFactory.CreateLogger<GeneralController>();
         // _loginValidator = loginValidator;
     }

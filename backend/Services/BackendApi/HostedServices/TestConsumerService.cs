@@ -1,9 +1,7 @@
-using Application;
 using Application.Configs;
 using Application.Utils.Service;
 using Infrastructure.Requests.Processor.Consumers.TestConsumer;
 using MassTransit;
-using Microsoft.Extensions.DependencyInjection;
 namespace FrontApi.HostedServices;
 
 public class TestConsumerService : BaseSchedulerSystem {
