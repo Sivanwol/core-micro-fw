@@ -90,6 +90,10 @@ jobs:
       - uses: subosito/flutter-action@v1
         with:
           channel: 'stable'
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
+          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:' # optional, change this to specify the cache path
+          architecture: x64
       - name: Install dependencies
         run: cd ${{ github.workspace }}/frontend/clientFront && flutter pub get
       - name: Build appbundle
@@ -125,6 +129,10 @@ jobs:
       - uses: subosito/flutter-action@v1
         with:
           channel: 'stable'
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
+          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:' # optional, change this to specify the cache path
+          architecture: x64
       - name: Install dependencies
         run: cd ${{ github.workspace }}/frontend/clientFront && flutter pub get
       - name: Run Test
