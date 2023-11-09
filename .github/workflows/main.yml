@@ -67,28 +67,9 @@ jobs:
         run: cd ${{ github.workspace }}/backend/Services/BackendApi && dotnet restore
       - name: Build
         run: cd ${{ github.workspace }}/backend/Services/BackendApi && dotnet build --no-restore
-  platforms-deps:
-    name: Platforms Platforms Deps
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Cache Flutter dependencies
-        uses: actions/cache@v1
-        with:
-          path: /opt/hostedtoolcache/flutter
-          key: ${{ runner.OS }}-flutter-install-cache-${{ env.flutter_version }}-${{ hashFiles('**/pubspec.lock') }}
-      - uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: "12.x"
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
   frontend-platforms:
     name: Frontend Platform Build - ClientFront
-    needs: [ platforms-deps, frontend-platforms-test-CI ]
+    needs: [ frontend-platforms-test-CI ]
     runs-on: macos-latest
     permissions:
       contents: "read"
@@ -97,6 +78,18 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v1
+        with:
+          path: /opt/hostedtoolcache/flutter
+          key: ${{ runner.os }}-flutter
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: "12.x"
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: 'stable'
       - name: Install dependencies
         run: cd ${{ github.workspace }}/frontend/clientFront && flutter pub get
       - name: Build appbundle
@@ -110,7 +103,6 @@ jobs:
   frontend-platforms-test-CI:
     name: Frontend Platform Test - ClientFront
     runs-on: macos-latest
-    needs: [ platforms-deps ]
     permissions:
       contents: "read"
       actions: "read"
@@ -121,6 +113,18 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v1
+        with:
+          path: /opt/hostedtoolcache/flutter
+          key: ${{ runner.os }}-flutter
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: "12.x"
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: 'stable'
       - name: Install dependencies
         run: cd ${{ github.workspace }}/frontend/clientFront && flutter pub get
       - name: Run Test
