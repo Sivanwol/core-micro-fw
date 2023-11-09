@@ -81,6 +81,10 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: "12.x"
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
@@ -90,6 +94,7 @@ jobs:
             echo "Tests Start for $path"
             cd ${{ github.workspace }}/frontend/$path && flutter pub get
             cd ${{ github.workspace }}/frontend/$path && flutter test
+            cd ${{ github.workspace }}/frontend/$path && flutter build appbundle
             cd ${{ github.workspace }}/frontend/$path && flutter build apk
             cd ${{ github.workspace }}/frontend/$path && flutter build ios --release --no-codesign
             cd ${{ github.workspace }}/frontend/$path && flutter build web

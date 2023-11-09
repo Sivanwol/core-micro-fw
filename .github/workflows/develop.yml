@@ -85,9 +85,9 @@ jobs:
             ${{ github.workspace }}/frontend/clientFront/build/web
             ${{ github.workspace }}/frontend/clientFront/build/ios/iphoneos/Runner.app    
   
-  
-  build-image-front-api-service:
-    name: Register Docker Images front-api as Package
+
+  build-image-backend-api-service:
+    name: Register Docker Images backend-api as Package
     runs-on: ubuntu-latest
     needs: [ backend-api-service, frontend-platforms ]
     permissions:
