@@ -24,6 +24,7 @@ env:
 jobs:
   projects-test-CI:
     runs-on: ubuntu-latest
+    needs: [ backend-api-service ]
     name: Projects Test Runner
     strategy:
       matrix:
@@ -50,8 +51,7 @@ jobs:
           done
   backend-api-service:
     runs-on: ubuntu-latest
-    name: Front Api Validation & Build
-    needs: [ projects-test-CI ]
+    name: Backend Api Validation & Build
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -64,9 +64,9 @@ jobs:
           dotnet-quality: "preview"
       # build and compile
       - name: Restore dependencies
-        run: cd ${{ github.workspace }}/backend/Services/Backend && dotnet restore
+        run: cd ${{ github.workspace }}/backend/Services/BackendApi && dotnet restore
       - name: Build
-        run: cd ${{ github.workspace }}/backend/Services/Backend && dotnet build --no-restore
+        run: cd ${{ github.workspace }}/backend/Services/BackendApi && dotnet build --no-restore
   frontend-platforms:
     name: Frontend Platforms & Build
     runs-on: macos-latest
