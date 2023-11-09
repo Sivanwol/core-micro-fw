@@ -67,66 +67,61 @@ jobs:
         run: cd ${{ github.workspace }}/backend/Services/BackendApi && dotnet restore
       - name: Build
         run: cd ${{ github.workspace }}/backend/Services/BackendApi && dotnet build --no-restore
-  
+  platforms-deps:
+    name: Platforms Platforms Deps
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v1
+        with:
+          path: /opt/hostedtoolcache/flutter
+          key: ${{ runner.OS }}-flutter-install-cache-${{ env.flutter_version }}-${{ hashFiles('**/pubspec.lock') }}
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: "12.x"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
   frontend-platforms:
-    name: Frontend Platforms & Build
-    needs: [ frontend-platforms-test-CI ]
+    name: Frontend Platform Build - ClientFront
+    needs: [ platforms-deps, frontend-platforms-test-CI ]
     runs-on: macos-latest
     permissions:
       contents: "read"
       actions: "read"
-    strategy:
-      matrix:
-        projectPaths:
-          - "clientFront"
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: "12.x"
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-      - name: Build And Test Frontend Clients
-        run: |
-          for path in ${{ join( matrix.projectPaths , ' ')}} }}; do
-            echo "Tests Start for $path"
-            cd ${{ github.workspace }}/frontend/$path && flutter pub get
-            cd ${{ github.workspace }}/frontend/$path && flutter build appbundle
-            cd ${{ github.workspace }}/frontend/$path && flutter build apk
-            cd ${{ github.workspace }}/frontend/$path && flutter build ios --release --no-codesign
-            cd ${{ github.workspace }}/frontend/$path && flutter build web
-            echo "Tests Finished for $path"
-          done
+      - name: Install dependencies
+        run: cd ${{ github.workspace }}/frontend/clientFront && flutter pub get
+      - name: Build appbundle
+        run: cd ${{ github.workspace }}/frontend/clientFront && flutter build appbundle
+      - name: Build APK
+        run: cd ${{ github.workspace }}/frontend/clientFront && flutter build apk
+      - name: Build IOS
+        run: cd ${{ github.workspace }}/frontend/clientFront && flutter build ios --release --no-codesig
+      - name: Build WEB
+        run: cd ${{ github.workspace }}/frontend/clientFront && flutter build web
   frontend-platforms-test-CI:
-    name: Frontend Platforms & Build
+    name: Frontend Platform Test - ClientFront
     runs-on: macos-latest
+    needs: [ platforms-deps ]
     permissions:
       contents: "read"
       actions: "read"
-    strategy:
-      matrix:
-        projectPaths:
-          - "clientFront"
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@v3
         with:
-          distribution: 'zulu'
-          java-version: "12.x"
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-      - name: Build And Test Frontend Clients
-        run: |
-          for path in ${{ join( matrix.projectPaths , ' ')}} }}; do
-            echo "Tests Start for $path"
-            cd ${{ github.workspace }}/frontend/$path && flutter pub get
-            cd ${{ github.workspace }}/frontend/$path && flutter test
-            echo "Tests Finished for $path"
-          done
+          fetch-depth: 0
+      - name: Install dependencies
+        run: cd ${{ github.workspace }}/frontend/clientFront && flutter pub get
+      - name: Run Test
+        run: cd ${{ github.workspace }}/frontend/clientFront && flutter test
