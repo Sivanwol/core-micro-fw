@@ -101,8 +101,6 @@ jobs:
         run: cd ${{ github.workspace }}/frontend/clientFront && flutter build appbundle
       - name: Build APK
         run: cd ${{ github.workspace }}/frontend/clientFront && flutter build apk
-      - name: Build IOS
-        run: cd ${{ github.workspace }}/frontend/clientFront && flutter build ios --release --no-codesig
       - name: Build WEB
         run: cd ${{ github.workspace }}/frontend/clientFront && flutter build web
   frontend-platforms-test-CI:
