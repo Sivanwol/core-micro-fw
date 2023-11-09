@@ -67,49 +67,31 @@ jobs:
         run: cd ${{ github.workspace }}/backend/Services/Backend && dotnet restore
       - name: Build
         run: cd ${{ github.workspace }}/backend/Services/Backend && dotnet build --no-restore
-  node-setup:
-    runs-on: ubuntu-latest
-    name: Setup Node
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-          cache-dependency-path: ${{ github.workspace }}/frontend/package-lock.json
   frontend-platforms:
-    name: Frontend Platforms Lint & Build
-    needs: [node-setup]
-    runs-on: ubuntu-latest
+    name: Frontend Platforms & Build
+    runs-on: macos-latest
     permissions:
       contents: "read"
       actions: "read"
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        projectPaths:
+          - "clientFront"
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Cache npm dependencies
-        uses: actions/cache@v2
+      - uses: subosito/flutter-action@v2
         with:
-          path: ${{ github.workspace }}/frontend
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-      - uses: nrwl/nx-set-shas@v3
-      - name: Install JS dependencies
-        run: cd ${{ github.workspace }}/frontend && npm ci
-      - name: running nx operations
+          channel: 'stable'
+      - name: Build And Test Frontend Clients
         run: |
-          cd ${{ github.workspace }}/frontend 
-          npx nx affected -t lint --parallel=3
-          npx nx affected -t test --parallel=3 --configuration=ci
-          npx nx affected -t build --parallel=3
+          for path in ${{ join( matrix.projectPaths , ' ')}} }}; do
+            echo "Tests Start for $path"
+            cd ${{ github.workspace }}/frontend/$path && flutter pub get
+            cd ${{ github.workspace }}/frontend/$path && flutter test
+            cd ${{ github.workspace }}/frontend/$path && flutter build apk
+            cd ${{ github.workspace }}/frontend/$path && flutter build ios --release --no-codesign
+            cd ${{ github.workspace }}/frontend/$path && flutter build web
+            echo "Tests Finished for $path"
+          done
