@@ -1,17 +1,16 @@
-using System.Text.Json.Serialization;
-
+using Swashbuckle.AspNetCore.Annotations;
 namespace Infrastructure.Services.Auth.Models;
 
+[SwaggerSchema(Required = new[] {
+    "JWT Token Response"
+})]
+[SwaggerTag("Common")]
 public class JwtAuthResult {
-    /// <summary>
-    /// the access token issued by the authentication server
-    /// </summary>
-    [JsonPropertyName("accessToken")]
+
+
+    [SwaggerSchema("JWT Access Token")]
     public string AccessToken { get; set; }
 
-    /// <summary>
-    /// ;the refresh token object issued by the authentication server
-    /// </summary>
-    [JsonPropertyName("refreshToken")]
+    [SwaggerSchema("JWT Refresh Token")]
     public RefreshToken RefreshToken { get; set; }
 }

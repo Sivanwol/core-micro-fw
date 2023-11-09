@@ -1,7 +1,7 @@
-using Infrastructure.Responses.App.Users;
+using Infrastructure.Responses.Controllers.User;
 using MediatR;
-namespace Infrastructure.Requests.Processor.Services.User; 
+namespace Infrastructure.Requests.Processor.Services.User;
 
-public class GetUserProfileRequest : IRequest<ProfileResponse>{
+public class GetUserProfileRequest : IRequest<ProfileResponse> {
     public int UserId { get; set; }
 }

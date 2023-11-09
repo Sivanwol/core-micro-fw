@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="FluentValidation" Version="11.7.1"/>
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.5.1"/>
         <PackageReference Include="MassTransit" Version="8.1.2-develop.1564"/>
         <PackageReference Include="MediatR.Contracts" Version="2.0.1"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-rc.1.23419.4"/>
@@ -18,13 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Domain.Persistence\Domain.Persistence.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="Requests\Account\" />
-        <Folder Include="Responses\Backoffice\" />
-        <Folder Include="Responses\Processor\Services\"/>
+        <ProjectReference Include="..\Application\Application.csproj"/>
     </ItemGroup>
 
 </Project>

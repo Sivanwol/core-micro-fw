@@ -1,16 +1,14 @@
-using Domain.Interfaces.Repositories;
-using Domain.Persistence.Context;
+using Domain.Persistence.Interfaces.Repositories;
 using Infrastructure.Requests.Processor.Services.Countries;
 using Infrastructure.Responses.Processor.Services.Countries;
-using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 namespace Processor.Services.Countries.Base;
 
 public class LocateHandler : IRequestHandler<LocateCountryRequest, LocateCountryResponse> {
     private readonly ILogger _logger;
-    private readonly ICountriesRepository _repository;
     private readonly IMediator _mediator;
+    private readonly ICountriesRepository _repository;
     public LocateHandler(
         IMediator mediator,
         ILoggerFactory loggerFactory,
@@ -26,7 +24,7 @@ public class LocateHandler : IRequestHandler<LocateCountryRequest, LocateCountry
         var result = await _repository.GetById(request.CountryId);
         return new LocateCountryResponse {
             IsFound = result != null,
-            Record = result
+            // Record = result
         };
     }
 }

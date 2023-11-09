@@ -1,19 +1,19 @@
 using Domain.Entities;
-using Domain.Interfaces.Mock;
-using Domain.Interfaces.Repositories;
 using Domain.Persistence.Context;
-using Microsoft.Extensions.Logging;
+using Domain.Persistence.Interfaces.Mock;
+using Domain.Persistence.Interfaces.Repositories;
 using Domain.Persistence.Repositories.Common;
-namespace Domain.Persistence.Repositories; 
+using Microsoft.Extensions.Logging;
+namespace Domain.Persistence.Repositories;
 
-public class ReligionsRepository: BaseRepository, IReligionsRepository {
+public class ReligionsRepository : BaseRepository, IReligionsRepository {
     private readonly ILogger _logger;
     private readonly IReligionsMockService _mock;
     public ReligionsRepository(
         IDomainContext context,
         ILoggerFactory loggerFactory,
         IReligionsMockService mock
-        ) : base(context) {
+    ) : base(context) {
         _logger = loggerFactory.CreateLogger<ReligionsRepository>();
         _mock = mock;
     }
@@ -23,7 +23,7 @@ public class ReligionsRepository: BaseRepository, IReligionsRepository {
         _logger.LogInformation("Fetching all religions");
         return Task.FromResult(_mock.GetAll());
     }
-    
+
     public Task<Religions> GetById(int id) {
         // return Context.Countries.FirstOrDefaultAsync(c => c.ID == id);
         _logger.LogInformation($"Fetching religion with id {id}");

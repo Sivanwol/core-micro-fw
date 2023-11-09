@@ -1,5 +1,6 @@
 using System.Net;
 using Application.Responses.Base;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 namespace Application.Utils;
 
@@ -21,10 +22,13 @@ public static class ResponseHelper {
     }
 
     public static IActionResult CreateEmptyResponse(HttpStatusCode statusCode = HttpStatusCode.OK) {
-        return CreateResponse<EmptyResponse>(new EmptyResponse(), new List<string>(), statusCode);
+        return CreateResponse(new EmptyResponse(), new List<string>(), statusCode);
     }
 
     public static IActionResult CreateEmptyResponse(List<string> errors, HttpStatusCode statusCode = HttpStatusCode.OK) {
-        return CreateResponse<EmptyResponse>(new EmptyResponse(), errors, statusCode);
+        return CreateResponse(new EmptyResponse(), errors, statusCode);
+    }
+    public static List<string> HandlerErrorResponse(ValidationResult result) {
+        return result.Errors.Select(error => error.ErrorMessage).ToList();
     }
 }

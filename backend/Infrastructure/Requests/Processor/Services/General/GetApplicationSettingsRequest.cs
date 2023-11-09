@@ -1,4 +1,4 @@
-using Infrastructure.Responses.App;
+using Infrastructure.Responses.Controllers;
 using MediatR;
 namespace Infrastructure.Requests.Processor.Services.General;
 

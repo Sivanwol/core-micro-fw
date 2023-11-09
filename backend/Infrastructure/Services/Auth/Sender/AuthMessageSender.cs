@@ -1,8 +1,4 @@
 using Microsoft.Extensions.Options;
-using Twilio;
-using Twilio.Types;
-using Twilio.Rest.Api.V2010.Account;
-
 namespace Infrastructure.Services.Auth.Sender;
 
 public class AuthMessageSender(IOptions<SmsSettings> optionsSmsAccessor, IOptions<EmailSettings> optionsEmailAccessor)
@@ -18,7 +14,7 @@ public class AuthMessageSender(IOptions<SmsSettings> optionsSmsAccessor, IOption
     public Task SendSmsAsync(string number, string message) {
         return Task.FromResult(0);
         // // Plug in your SMS service here to send a text message.
-        // // Your Account SID from twilio.com/console
+        // // Your Controllers SID from twilio.com/console
         // var accountSid = Options.SMSAccountIdentification;
         // // Your Auth Token from twilio.com/console
         // var authToken = Options.SMSAccountPassword;

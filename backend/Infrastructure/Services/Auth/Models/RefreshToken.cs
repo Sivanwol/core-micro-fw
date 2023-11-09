@@ -1,13 +1,12 @@
 using System.Text.Json.Serialization;
-
 namespace Infrastructure.Services.Auth.Models;
 
 public class RefreshToken {
     /// <summary>
     /// user name (email) of the account that the token is for
     /// </summary>
-    [JsonPropertyName("username")]
-    public string UserName { get; set; } // can be used for usage tracking
+    [JsonPropertyName("userToken")]
+    public string UserToken { get; set; } // can be used for usage tracking
     // can optionally include other metadata, such as user agent, ip address, device name, and so on
 
     /// <summary>

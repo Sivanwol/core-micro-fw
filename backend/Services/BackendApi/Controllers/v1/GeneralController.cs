@@ -4,7 +4,7 @@ using Application.Responses.Base;
 using Application.Utils;
 using Application.Utils.Service;
 using Infrastructure.Requests.Processor.Services.General;
-using Infrastructure.Responses.App;
+using Infrastructure.Responses.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;

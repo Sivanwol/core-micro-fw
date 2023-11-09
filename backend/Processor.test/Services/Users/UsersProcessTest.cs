@@ -1,8 +1,3 @@
-using Application.Utils;
-using MassTransit;
-using MassTransit.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Processor.Consumers.IndexUser;
 using Test.Shared.Common;
 namespace Processor.Test.Services.Users;
 
@@ -16,7 +11,7 @@ public class UsersProcessTest : BaseTest {
     [Test]
     public async Task GetUserListTest() {
         Assert.Ignore();
-        ReloadData();
+        // ReloadData();
         // var requester = new ListUsersRequest();
         // var handler = new ListUsersHandler(Mediator.Object, Context.Object);
         // var response = await handler.Handle(requester, CancellationToken.None);
@@ -29,36 +24,36 @@ public class UsersProcessTest : BaseTest {
     [Test]
     public async Task IndexNewUserTest() {
         Assert.Ignore();
-        var user = MockTestHelper.GetUsers()[0];
-        await using var provider = new ServiceCollection()
-            .AddMassTransitTestHarness(cfg => {
-                cfg.AddDelayedMessageScheduler();
-                cfg.AddConsumers(typeof(IndexUserConsumerHandler));
-                cfg.UsingInMemory((context, cfg) => {
-                    cfg.UseDelayedMessageScheduler();
-
-                    cfg.ConfigureEndpoints(context);
-                });
-            })
-            .BuildServiceProvider(true);
-        var harness = provider.GetRequiredService<ITestHarness>();
-        await harness.Start();
-        try {
-            var client = harness.GetRequestClient<IndexUserRequest>();
-            var response = await client.GetResponse<IndexUserConsumerHandler>(new IndexUserRequest {
-                Id = Guid.NewGuid().ToString(),
-                UpdateTime = SystemClock.Now().DateTime
-            });
-
-            Assert.Equals(await harness.Sent.Any<IndexUserRequest>(), true);
-            Assert.Equals(await harness.Consumed.Any<IndexUserEvent>(), true);
-        }
-        catch (Exception exec) {
-            var error = exec.Message;
-        }
-        finally {
-            await harness.Stop();
-            await provider.DisposeAsync();
-        }
+        // var user = MockTestHelper.GetUsers()[0];
+        // await using var provider = new ServiceCollection()
+        //     .AddMassTransitTestHarness(cfg => {
+        //         cfg.AddDelayedMessageScheduler();
+        //         cfg.AddConsumers(typeof(IndexUserConsumerHandler));
+        //         cfg.UsingInMemory((context, cfg) => {
+        //             cfg.UseDelayedMessageScheduler();
+        //
+        //             cfg.ConfigureEndpoints(context);
+        //         });
+        //     })
+        //     .BuildServiceProvider(true);
+        // var harness = provider.GetRequiredService<ITestHarness>();
+        // await harness.Start();
+        // try {
+        //     var client = harness.GetRequestClient<IndexUserRequest>();
+        //     var response = await client.GetResponse<IndexUserConsumerHandler>(new IndexUserRequest {
+        //         Id = Guid.NewGuid().ToString(),
+        //         UpdateTime = SystemClock.Now().DateTime
+        //     });
+        //
+        //     Assert.Equals(await harness.Sent.Any<IndexUserRequest>(), true);
+        //     Assert.Equals(await harness.Consumed.Any<IndexUserEvent>(), true);
+        // }
+        // catch (Exception exec) {
+        //     var error = exec.Message;
+        // }
+        // finally {
+        //     await harness.Stop();
+        //     await provider.DisposeAsync();
+        // }
     }
 }

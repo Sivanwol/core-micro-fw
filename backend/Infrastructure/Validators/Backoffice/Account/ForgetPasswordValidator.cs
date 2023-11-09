@@ -1,5 +1,5 @@
 using FluentValidation;
-using Infrastructure.Requests.Account.Backoffice;
+using Infrastructure.Requests.Controllers.Backoffice;
 namespace Infrastructure.Validators.Backoffice.Account;
 
 public class ForgetPasswordValidator : AbstractValidator<ForgetPasswordRequest> {

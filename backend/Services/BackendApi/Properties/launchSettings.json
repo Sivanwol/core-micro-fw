@@ -19,6 +19,7 @@
       "environmentVariables": {
         "HOME": "./",
         "AzureHost": "false",
+        "IsLocalConfiguration": "true",
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:3000",
         "EnvironmentLabel": "local",
@@ -49,6 +50,7 @@
       "environmentVariables": {
         "HOME": "./",
         "AzureHost": "false",
+        "IsLocalConfiguration": "true",
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:3000",
         "EnvironmentLabel": "local",
@@ -62,6 +64,7 @@
       "environmentVariables": {
         "HOME": "./",
         "AzureHost": "false",
+        "IsLocalConfiguration": "true",
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:3000",
         "EnvironmentLabel": "local",

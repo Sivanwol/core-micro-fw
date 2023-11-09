@@ -4,7 +4,7 @@ using Application.Utils;
 using Application.Utils.Service;
 using Domain.Entities;
 using FluentValidation;
-using Infrastructure.Requests.Account.Backoffice;
+using Infrastructure.Requests.Controllers.Backoffice;
 using Infrastructure.Requests.Processor.Services.User;
 using Infrastructure.Services.Auth;
 using MediatR;

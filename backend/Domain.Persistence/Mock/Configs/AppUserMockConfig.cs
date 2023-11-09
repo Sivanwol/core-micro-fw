@@ -1,23 +1,27 @@
+using Application.Utils;
 using AutoBogus;
 using Bogus;
 using Domain.Entities;
-using Domain.Enums;
-namespace Domain.Persistence.Mock.Configs; 
+using Infrastructure.Enums;
+namespace Domain.Persistence.Mock.Configs;
 
 public sealed class AppUserMockConfig : AutoFaker<Users> {
     public AppUserMockConfig() {
         Randomizer.Seed = new Random(8675309);
-        RuleFor(fake => fake.ID, fake => fake.Random.Number(1, 1000));
-        RuleFor(fake => fake.Token, fake => fake.Random.String2(128));
+        RuleFor(fake => fake.UserId, fake => fake.Random.Number(1, 1000));
+        RuleFor(fake => fake.Token, fake => StringExtensions.RandomString(128));
         RuleFor(fake => fake.FirstName, fake => fake.Name.FirstName());
         RuleFor(fake => fake.LastName, fake => fake.Name.LastName());
         RuleFor(fake => fake.Email, fake => fake.Person.Email);
         RuleFor(fake => fake.Gender, fake => fake.PickRandom<Gender>());
-        RuleFor(fake => fake.Latitude,fake => fake.Address.Latitude());
-        RuleFor(fake => fake.Height , fake => fake.Random.Decimal(110, 210));
+        RuleFor(fake => fake.Latitude, fake => fake.Address.Latitude());
+        RuleFor(fake => fake.Height, fake => fake.Random.Decimal(110, 210));
+        RuleFor(fake => fake.PhoneVerify, fake => true);
+        RuleFor(fake => fake.TermsApproved, fake => true);
         RuleFor(fake => fake.MeasureUnits, fake => fake.PickRandom<MeasureUnit>());
         RuleFor(fake => fake.PartnerAgeFrom, fake => fake.Random.Number(18, 40));
         RuleFor(fake => fake.PartnerAgeTo, fake => fake.Random.Number(41, 99));
+        RuleFor(fake => fake.DefaultImageId, fake => fake.Random.Number(1, 1000));
         RuleFor(fake => fake.PartnerHeightFrom, fake => fake.Random.Number(110, 150));
         RuleFor(fake => fake.PartnerHeightTo, fake => fake.Random.Number(151, 210));
         RuleFor(fake => fake.PhoneNumber, fake => fake.Person.Phone);

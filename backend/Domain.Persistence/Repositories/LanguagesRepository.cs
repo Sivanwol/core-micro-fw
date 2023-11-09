@@ -1,32 +1,32 @@
 using Domain.Entities;
-using Domain.Interfaces.Mock;
-using Domain.Interfaces.Repositories;
 using Domain.Persistence.Context;
-using Microsoft.Extensions.Logging;
+using Domain.Persistence.Interfaces.Mock;
+using Domain.Persistence.Interfaces.Repositories;
 using Domain.Persistence.Repositories.Common;
-namespace Domain.Persistence.Repositories; 
+using Microsoft.Extensions.Logging;
+namespace Domain.Persistence.Repositories;
 
-public class LanguagesRepository: BaseRepository, ILanguagesRepository {
+public class LanguagesRepository : BaseRepository, ILanguagesRepository {
     private readonly ILogger _logger;
     private readonly ILanguagesMockService _mock;
     public LanguagesRepository(
         IDomainContext context,
         ILoggerFactory loggerFactory,
         ILanguagesMockService mock
-        ) : base(context) {
+    ) : base(context) {
         _logger = loggerFactory.CreateLogger<LanguagesRepository>();
         _mock = mock;
     }
 
     public Task<IEnumerable<Languages>> GetAll() {
-        // return await Context.Countries.ToListAsync();
         _logger.LogInformation("Fetching all languages");
+        // return await Context.Countries.ToListAsync();
         return Task.FromResult(_mock.GetAll());
     }
-    
+
     public Task<Languages> GetById(int id) {
-        // return Context.Countries.FirstOrDefaultAsync(c => c.ID == id);
         _logger.LogInformation($"Fetching language with id {id}");
+        // return Context.Countries.FirstOrDefaultAsync(c => c.ID == id);
         return Task.FromResult(_mock.GetOne());
     }
 }

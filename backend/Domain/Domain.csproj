@@ -25,4 +25,9 @@
         </PackageReference>
         <PackageReference Include="Serilog" Version="3.0.1" />
     </ItemGroup>
+
+
+    <ItemGroup>
+        <ProjectReference Include="..\Infrastructure\Infrastructure.csproj"/>
+    </ItemGroup>
 </Project>

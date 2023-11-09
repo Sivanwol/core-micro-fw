@@ -4,16 +4,22 @@ namespace BackendApi;
 
 public class Program {
     private static string? _getCurrentEnvironment;
-
+    private static bool _isLocalConfiguration;
     static Program() {
         _getCurrentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        _isLocalConfiguration = string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AzureConfigConnectionString")) &&
+                                bool.Parse(Environment.GetEnvironmentVariable("IsLocalConfiguration") ?? "false");
     }
 
     public static int Main(string[] args) {
         try {
-            SerilogExtension.ProcessLogHandler("FrontApi", _getCurrentEnvironment ??= "development");
+            SerilogExtension.ProcessLogHandler("Backend", _getCurrentEnvironment ??= "development");
             Log.Information("Starting host...");
-            CreateHostBuilder(args).Build().Run();
+            if (!_isLocalConfiguration) {
+                CreateLocalConfigurationHostBuilder(args).Build().Run();
+            } else {
+                CreateHostBuilder(args).Build().Run();
+            }
         }
         catch (Exception e) {
             Log.Fatal("Host terminated unexpectedly: {Message}", e.Message);
@@ -25,6 +31,12 @@ public class Program {
         }
         return 0;
     }
+    private static IHostBuilder CreateLocalConfigurationHostBuilder(string[] args) => Host
+        .CreateDefaultBuilder(args)
+        .ConfigureWebHostDefaults(builder => {
+            builder.UseStartup<Bootstrap>();
+        })
+        .UseSerilogExtenstion();
 
     private static IHostBuilder CreateHostBuilder(string[] args) => Host
         .CreateDefaultBuilder(args)

@@ -2,8 +2,8 @@ using System.Text;
 using Application.Configs;
 using Application.Extensions;
 using Domain.Entities;
+using Domain.Persistence;
 using Domain.Persistence.Context;
-using Domain.Persistence.Extensions;
 using FluentValidation;
 using HealthChecks.ApplicationStatus.DependencyInjection;
 using HealthChecks.UI.Client;
@@ -17,7 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.FeatureManagement;
 using Microsoft.IdentityModel.Tokens;
-using Processor.Consumers.TestConsumer;
+using Processor;
 using Serilog;
 namespace BackendApi;
 
@@ -27,9 +27,11 @@ public class Bootstrap {
         Environment = env;
         Log.Information("Start Bootstrap And Configuration Setup");
         ActiveAzureConfigConnectionString = Configuration["AzureConfigConnectionString"]!;
+        IsLocalConfiguration = string.IsNullOrEmpty(ActiveAzureConfigConnectionString) && bool.Parse(Configuration["IsLocalConfiguration"]!);
     }
 
     public static IWebHostEnvironment Environment { get; set; }
+    public static bool IsLocalConfiguration { get; set; }
 
     public static IConfiguration Configuration { get; set; }
     public static string ActiveAzureConfigConnectionString { get; private set; }
@@ -40,7 +42,9 @@ public class Bootstrap {
         // Load configuration from Azure App Configuration
         services.AddAzureAppConfiguration()
             .AddFeatureManagement();
-        services.Configure<BackendApplicationConfig>(Configuration.GetSection("ApplicationConfig"));
+        if (!IsLocalConfiguration) {
+            services.Configure<BackendApplicationConfig>(Configuration.GetSection("ApplicationConfig"));
+        }
         var applicationConfig = Configuration.GetSection("ApplicationConfig").Get<BackendApplicationConfig>()!;
         var jwtTokenConfig = new JwtTokenConfig {
             Secret = applicationConfig.JwtSecret,
@@ -112,21 +116,14 @@ public class Bootstrap {
 
         #region AddMediatR
 
-        // services.AddMediatR(configuration => {
-        //     // configuration.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies().Where(x => x.FullName!.Contains("Infrastructure")).ToArray());
-        //     configuration.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
-        //     configuration.RegisterServicesFromAssemblyContaining<GetUserProfileRequest>();
-        //     configuration.RegisterServicesFromAssemblyContaining(typeof(GetApplicationSettingsRequest));
-        // });
         services.AddMediatR(cfg =>
             cfg.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.FullName!.Contains("Sql")).ToArray()));
         // enabled elastic search 
         // services.AddElasticsearch(Configuration);
         services.AddMassTransitExtension(applicationConfig, bus => {
-            // bus.AddConsumer<IndexUserConsumerHandler>();
-            bus.AddConsumer<TestConsumerHandler>();
-        }, c => {
-            //services.AddHostedService<TestConsumerService>();
+            ServiceProcessExtensions.AddConsumersExtension(applicationConfig, bus);
+        }, cfg => {
+            ServiceProcessExtensions.AddJobsExtension(cfg, applicationConfig);
         });
 
         #endregion
