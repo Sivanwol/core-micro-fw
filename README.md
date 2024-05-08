@@ -1,6 +1,8 @@
 # Project Info
 
-This project serves as the backend for a platform idea I had, designed to support modular administrative logic and a microservices environment. The project also supports Docker.
+This project serves as the backend for a platform idea I had, 
+The idea is for a Modular IT System that enables the management of the inventor and the services. It has (sadly lack of time and budget hit).
+to be designed to support modular administrative logic and a microservices environment. The project also supports Docker.
 
 The platform is organized as a monorepo with two main setups:
 1. **Frontend** - Contains all client interfaces for the platform.
