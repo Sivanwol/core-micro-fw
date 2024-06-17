@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-
 namespace Infrastructure.Services.Auth.Models;
 
 public class JwtTokenConfig {

@@ -21,6 +21,17 @@ public static class ResponseHelper {
         };
     }
 
+    public static DataResponse<TObject> CreateResponseGQL<TObject>(TObject data, List<string> errors, HttpStatusCode statusCode = HttpStatusCode.OK) where TObject : class {
+        var response = new DataResponse<TObject>(data);
+        response.StatusCode = (int)statusCode;
+        if (statusCode != HttpStatusCode.OK) {
+            response.Status = false;
+        }
+        response.Errors = errors;
+        return response;
+    }
+
+
     public static IActionResult CreateEmptyResponse(HttpStatusCode statusCode = HttpStatusCode.OK) {
         return CreateResponse(new EmptyResponse(), new List<string>(), statusCode);
     }

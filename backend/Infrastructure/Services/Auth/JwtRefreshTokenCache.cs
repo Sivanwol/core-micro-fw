@@ -1,13 +1,16 @@
 using Microsoft.Extensions.Hosting;
-
 namespace Infrastructure.Services.Auth;
 
 public class JwtRefreshTokenCache : IHostedService, IDisposable {
-    private Timer _timer;
     private readonly IJwtAuthManager _jwtAuthManager;
+    private Timer _timer;
 
     public JwtRefreshTokenCache(IJwtAuthManager jwtAuthManager) {
         _jwtAuthManager = jwtAuthManager;
+    }
+
+    public void Dispose() {
+        _timer?.Dispose();
     }
 
     public Task StartAsync(CancellationToken stoppingToken) {
@@ -16,16 +19,12 @@ public class JwtRefreshTokenCache : IHostedService, IDisposable {
         return Task.CompletedTask;
     }
 
-    private void DoWork(object state) {
-        _jwtAuthManager.RemoveExpiredRefreshTokens(DateTime.Now);
-    }
-
     public Task StopAsync(CancellationToken stoppingToken) {
         _timer?.Change(Timeout.Infinite, 0);
         return Task.CompletedTask;
     }
 
-    public void Dispose() {
-        _timer?.Dispose();
+    private void DoWork(object state) {
+        _jwtAuthManager.RemoveExpiredRefreshTokens(DateTime.Now);
     }
 }

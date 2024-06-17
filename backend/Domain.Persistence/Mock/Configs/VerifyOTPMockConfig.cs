@@ -1,6 +1,6 @@
 using AutoBogus;
 using Bogus;
-using Domain.Entities.OTP;
+using Domain.DTO.OTP;
 namespace Domain.Persistence.Mock.Configs;
 
 public sealed class VerifyOTPMockConfig : AutoFaker<VerifyOTPResponseData> {

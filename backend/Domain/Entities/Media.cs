@@ -1,23 +1,35 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Domain.Common;
-using Infrastructure.Responses.Common;
+using Domain.Entities.Common;
 namespace Domain.Entities;
 
-[Table("Media")]
-public class Media : BaseEntity {
-    public int UserId { get; set; }
-    public string Path { get; set; }
+[Table("media")]
+public class Media : BaseEntity
+{
+    [StringLength(500)]
     public string FileName { get; set; }
-    public string FileUrl { get; set; }
-    public int Width { get; set; }
-    public int Height { get; set; }
 
-    public MediaInfo ToMediaInfo() {
-        return new MediaInfo {
+    [StringLength(500)]
+    public string Path { get; set; }
+
+    [StringLength(20)]
+    public string MimeType { get; set; }
+
+    public long Size { get; set; }
+
+    [StringLength(100)]
+    public string BucketName { get; set; }
+    
+    public Infrastructure.GQL.Media ToGql()
+    {
+        return new Infrastructure.GQL.Media()
+        {
             Id = Id,
-            ImageWidth = Width,
-            ImageHeight = Height,
-            Url = FileUrl
+            FileName = FileName,
+            Path = Path,
+            FileSize = Size,
+            MimeType = MimeType,
+            BucketName= BucketName
         };
     }
 }

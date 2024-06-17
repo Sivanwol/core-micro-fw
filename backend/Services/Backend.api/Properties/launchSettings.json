@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:58286",
+      "sslPort": 44362
+    }
+  },
+  "hotReloadEnabled": true,
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:3000",
+      "environmentVariables": {
+        "HOME": "./",
+        "AzureHost": "false",
+        "IsLocalConfiguration": "true",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:3000",
+        "EnvironmentLabel": "local",
+        "AzureConfigConnectionString": ""
+      },
+      "dotnetRunMessages": true
+    },
+    "http_prod": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:3000",
+      "environmentVariables": {
+        "HOME": "./",
+        "AzureHost": "false",
+        "ASPNETCORE_ENVIRONMENT": "Production",
+        "ASPNETCORE_URLS": "http://localhost:3000",
+        "EnvironmentLabel": "local",
+        "AzureConfigConnectionString": ""
+      },
+      "dotnetRunMessages": true
+    },
+    "https": {
+      "commandName": "Project",
+      "applicationUrl": "https://localhost:7231;http://localhost:3000",
+      "environmentVariables": {
+        "HOME": "./",
+        "AzureHost": "false",
+        "IsLocalConfiguration": "true",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:3000",
+        "EnvironmentLabel": "local",
+        "AzureConfigConnectionString": ""
+      },
+      "dotnetRunMessages": true
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "environmentVariables": {
+        "HOME": "./",
+        "AzureHost": "false",
+        "IsLocalConfiguration": "true",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:3000",
+        "EnvironmentLabel": "local",
+        "AzureConfigConnectionString": ""
+      }
+    }
+  }
+}

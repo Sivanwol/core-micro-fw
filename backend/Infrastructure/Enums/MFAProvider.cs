@@ -1,6 +1,6 @@
 namespace Infrastructure.Enums;
 
 public enum MFAProvider {
-    SMS,
-    Email
+    SMS = 1,
+    Email = 2
 }

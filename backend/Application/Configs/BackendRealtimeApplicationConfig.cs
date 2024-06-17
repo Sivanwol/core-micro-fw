@@ -1,4 +1,3 @@
 namespace Application.Configs;
 
-public class BackendRealtimeApplicationConfig : BackendApplicationConfig {
-}
+public class BackendRealtimeApplicationConfig : BackendApplicationConfig { }

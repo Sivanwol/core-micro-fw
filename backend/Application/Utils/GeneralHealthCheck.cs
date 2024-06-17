@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-
 namespace Application.Utils;
 
 public class GeneralHealthCheck : IHealthCheck {

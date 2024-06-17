@@ -1,3 +1,5 @@
+using Application.Enums;
+
 namespace Application.Exceptions;
 
 public class EntityMetaDataNotFoundException : BaseException {

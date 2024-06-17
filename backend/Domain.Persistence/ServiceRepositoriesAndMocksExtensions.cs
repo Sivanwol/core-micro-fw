@@ -1,7 +1,7 @@
-using Domain.Persistence.Interfaces.Mock;
-using Domain.Persistence.Interfaces.Repositories;
 using Domain.Persistence.Mock.Services;
+using Domain.Persistence.Mock.Services.Interfaces;
 using Domain.Persistence.Repositories;
+using Domain.Persistence.Repositories.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 namespace Domain.Persistence;
 
@@ -12,14 +12,14 @@ public static class ServiceRepositoriesAndMocksExtensions {
         #region Repositories Registers
 
         services.AddTransient<ICountriesRepository, CountriesRepository>();
-        services.AddTransient<IEthnicitiesRepository, EthnicitiesRepository>();
         services.AddTransient<ILanguagesRepository, LanguagesRepository>();
-        services.AddTransient<IReligionsRepository, ReligionsRepository>();
-        services.AddTransient<IAppUserRepository, AppUserRepository>();
+        services.AddTransient<IApplicationUserRepository, ApplicationUserRepository>();
         services.AddTransient<IOTPRepository, OTPRepository>();
+        services.AddTransient<IActivityLogRepository, ActivityLogRepository>();
+        services.AddTransient<IConfigurableUserViewRepository, ConfigurableUserViewRepository>();
+        services.AddTransient<IClientRepository, ClientRepository>();
         services.AddTransient<IMediaRepository, MediaRepository>();
-        services.AddTransient<ISessionRepository, SessionRepository>();
-        services.AddTransient<IChatRepository, ChatRepository>();
+        services.AddTransient<IVendorRepository, VendorRepository>();
 
         #endregion
 
@@ -29,14 +29,10 @@ public static class ServiceRepositoriesAndMocksExtensions {
         #region Mocks Registers
 
         services.AddTransient<ICountiesMockService, MockCountiesServices>();
-        services.AddTransient<IEthnicitiesMockService, MockEthnicitiesServices>();
         services.AddTransient<ILanguagesMockService, MockLanguagesServices>();
-        services.AddTransient<IReligionsMockService, MockReligionsServices>();
         services.AddTransient<IAppUserMockService, MockAppUserServices>();
-        services.AddTransient<IOTPMockService, MockOTPServices>();
-        services.AddTransient<IMediaMockService, MockMediaServices>();
-        services.AddTransient<ISessionsMockService, MockSessionsServices>();
-        services.AddTransient<IChatMockService, MockChatServices>();
+        services.AddTransient<IOTPMockService, MockUserOPTCodeServices>();
+        services.AddTransient<IActivityLogMockService, MockActivityLogService>();
 
         #endregion
 

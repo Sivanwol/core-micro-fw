@@ -1,38 +1,36 @@
 using Domain.Entities;
 using Domain.Persistence.Context;
-using Domain.Persistence.Interfaces.Mock;
-using Domain.Persistence.Interfaces.Repositories;
 using Domain.Persistence.Repositories.Common;
+using Domain.Persistence.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 namespace Domain.Persistence.Repositories;
 
 public class CountriesRepository : BaseRepository, ICountriesRepository {
     private readonly ILogger _logger;
-    private readonly ICountiesMockService _mock;
     public CountriesRepository(
         IDomainContext context,
-        ILoggerFactory loggerFactory,
-        ICountiesMockService mock
+        ILoggerFactory loggerFactory
     ) : base(context) {
         _logger = loggerFactory.CreateLogger<CountriesRepository>();
-        _mock = mock;
     }
 
-    public Task<IEnumerable<Countries>> GetAll() {
-        // return await Context.Countries.ToListAsync();
+    public async Task<IEnumerable<Countries>> GetAll() {
         _logger.LogInformation("Fetching all countries");
-        return Task.FromResult(_mock.GetAll());
+        var result = Context.Countries
+            .Select(row => row)
+            .Where(w => w.SupportedAt != null)
+            .ToList();
+        return result;
     }
-    public Task<Countries> GetByCode(string code) {
-        // return Context.Countries.FirstOrDefaultAsync(c => c.Code == code);
+    public async Task<Countries?> GetByCode(string code) {
         _logger.LogInformation($"Fetching country with code {code}");
-        return Task.FromResult(_mock.GetOne());
+        var result = Context.Countries.FirstOrDefault(row => row.SupportedAt != null && row.CountryCode == code);
+        return result;
     }
 
-    public Task<Countries> GetById(int id) {
-        // return Context.Countries.FirstOrDefaultAsync(c => c.ID == id);
-
+    public async Task<Countries?> GetById(int id) {
         _logger.LogInformation($"Fetching country with id {id}");
-        return Task.FromResult(_mock.GetOne());
+        var result = Context.Countries.FirstOrDefault(row => row.SupportedAt != null && row.Id == id);
+        return result;
     }
 }

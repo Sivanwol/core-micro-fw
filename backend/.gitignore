@@ -8,9 +8,7 @@
 *.user
 *.userosscache
 *.sln.docstates
-.idea
-.vscode
-.vs
+.aspnet
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 # any crap of docker need be ignored
@@ -239,3 +237,7 @@ _Pvt_Extensions
 # Ignore DevSpace cache and log folder
 .devspace/
 
+
+# environment files
+!.env.exmple
+.env*

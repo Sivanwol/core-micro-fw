@@ -5,13 +5,16 @@ using Quartz;
 namespace Application.Extensions;
 
 public static class MasstransitExtension {
-    public static void AddMassTransitExtension(this IServiceCollection services, BackendApplicationConfig config, Action<IBusRegistrationConfigurator>? registerTransitConsumers,
-        Action<IServiceCollectionQuartzConfigurator>? registerTransitScheduler = null) {
+    public static void AddMassTransitExtension(this IServiceCollection services, string connectionString, BackendApplicationConfig config,
+        Action<IBusRegistrationConfigurator>? registerTransitConsumers,
+        Action<IServiceCollectionQuartzConfigurator>? registerTransitScheduler = null,
+        Action<IBusRegistrationConfigurator>? registerStateMachineDefinions = null) {
         services.Configure<MassTransitHostOptions>(options => {
             options.WaitUntilStarted = true;
         });
         services.AddQuartz(c => {
-            c.SchedulerName = "Mylo-System-Job";
+
+            c.SchedulerName = "System-Job";
             c.SchedulerId = "AUTO";
             c.UseMicrosoftDependencyInjectionJobFactory();
             c.UseDedicatedThreadPool(t => {
@@ -20,7 +23,7 @@ public static class MasstransitExtension {
             c.InterruptJobsOnShutdown = true;
             c.UseTimeZoneConverter();
             c.UsePersistentStore(s => {
-                s.UseSqlServer(config.ConnectionString);
+                s.UsePostgres(connectionString);
                 s.UseProperties = true;
                 s.RetryInterval = TimeSpan.FromSeconds(15);
                 s.UseJsonSerializer();
@@ -43,22 +46,29 @@ public static class MasstransitExtension {
             bus.SetSnakeCaseEndpointNameFormatter();
             bus.AddQuartzConsumers();
             registerTransitConsumers?.Invoke(bus);
-            if (config.IsTesting) {
+            if (config.DeveloperMode) {
                 bus.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); });
                 return;
             }
-            TransitBus(config, bus);
+            TransitBus(config, bus, registerStateMachineDefinions);
         });
     }
 
-    private static void TransitBus(BackendApplicationConfig configuration, IBusRegistrationConfigurator bus) {
-        bus.UsingAzureServiceBus((context, cfg) => {
-            cfg.Host(configuration.AzureServiceBus);
-            cfg.EnablePartitioning = true;
-            cfg.EnableDeadLetteringOnMessageExpiration = true;
-            cfg.UseServiceBusMessageScheduler();
-            // cfg.UsePublishMessageScheduler();
-            cfg.ConfigureEndpoints(context);
+    private static void TransitBus(BackendApplicationConfig configuration, IBusRegistrationConfigurator bus,
+        Action<IBusRegistrationConfigurator>? registerStateMachineDefinions = null) {
+        registerStateMachineDefinions?.Invoke(bus);
+        bus.AddMassTransit(x => {
+            x.UsingRabbitMq((context, cfg) => {
+                cfg.Host(configuration.RabbitMqHost, configuration.RabbitMqVirtualHost, h => {
+                    h.Username(configuration.RabbitMqUsername);
+                    h.Password(configuration.RabbitMqPassword);
+                    if (configuration.RabbitMqSslProtocol) {
+                        h.UseSsl(ssl => {
+                            ssl.Protocol = System.Security.Authentication.SslProtocols.Tls12;
+                        });
+                    }
+                });
+            });
         });
     }
 }

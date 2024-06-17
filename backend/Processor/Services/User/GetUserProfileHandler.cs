@@ -1,53 +1,56 @@
-using Domain.Persistence.Interfaces.Repositories;
+using Application.Constraints;
+using Application.Exceptions;
+using Domain.Entities;
+using Domain.Persistence.Repositories.Interfaces;
 using Infrastructure.Requests.Processor.Services.User;
-using Infrastructure.Responses.Controllers.User;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Serilog;
 namespace Processor.Services.User;
 
-public class GetUserProfileHandler : IRequestHandler<GetUserProfileRequest, ProfileResponse> {
-    private readonly IAppUserRepository _appUserRepository;
-    private readonly IMediaRepository _mediaRepository;
+public class GetUserProfileHandler : IRequestHandler<GetUserProfileRequest, Infrastructure.GQL.User> {
+    private readonly IApplicationUserRepository _applicationUserRepository;
+    private readonly ICountriesRepository _countriesRepository;
+    private readonly ILanguagesRepository _languagesRepository;
     private readonly IMediator _mediator;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     public GetUserProfileHandler(IMediator mediator,
-        IAppUserRepository appUserRepository,
-        IMediaRepository mediaRepository) {
-        _appUserRepository = appUserRepository;
+        IApplicationUserRepository applicationUserRepository,
+        UserManager<ApplicationUser> userManager,
+        ICountriesRepository _countriesRepository,
+        ILanguagesRepository _languagesRepository) {
+        _applicationUserRepository = applicationUserRepository;
         _mediator = mediator;
-        _mediaRepository = mediaRepository;
+        _userManager = userManager;
+        this._countriesRepository = _countriesRepository;
+        this._languagesRepository = _languagesRepository;
     }
 
-    public async Task<ProfileResponse> Handle(GetUserProfileRequest request, CancellationToken cancellationToken) {
+    public async Task<Infrastructure.GQL.User> Handle(GetUserProfileRequest request, CancellationToken cancellationToken) {
         Log.Logger.Information($"GetUserProfileHandler: {request.UserId}");
-        var result = await _appUserRepository.GetUserProfile(request.UserId);
-        var resultFiles = await _mediaRepository.GetUserMedia(request.UserId);
-        return await Task.FromResult(new ProfileResponse {
-            ID = result.User.UserId,
-            FirstName = result.User.FirstName,
-            LastName = result.User.LastName,
-            Email = result.User.Email,
-            PhoneNumber = result.User.PhoneNumber,
-            CountryId = result.User.CountryId,
-            Latitude = result.User.Latitude,
-            Longitude = result.User.Longitude,
-            EmailVerified = result.User.EmailVerified,
-            DefaultImageId = result.User.DefaultImageId,
-            TermsApproved = result.User.TermsApproved,
-            BirthDate = result.User.BirthDate,
-            Gender = Enum.GetName(result.User.Gender)!,
-            Height = result.User.Height,
-            MeasureUnits = Enum.GetName(result.User.MeasureUnits)!,
-            LanguageId = result.User.LanguageId,
-            ReligionId = result.User.ReligionId,
-            EthnicityId = result.User.EthnicityId,
-            PartnerAgeFrom = result.User.PartnerAgeFrom,
-            PartnerAgeTo = result.User.PartnerAgeTo,
-            PartnerHeightFrom = result.User.PartnerHeightFrom,
-            PartnerHeightTo = result.User.PartnerHeightTo,
-            PartnerReligions = result.PartnerReligions.Select(x => x.ReligionId),
-            PartnerEthnicities = result.PartnerEthnicities.Select(x => x.EthnicityId),
-            Files = resultFiles.Select(x => x.ToMediaInfo())
-        });
+        if (request.UserId != request.LoggedInUserId) {
+            var loggedUser = await _applicationUserRepository.GetById(request.LoggedInUserId);
+            if (loggedUser == null) {
+                Log.Logger.Error($"GetUserProfileHandler: Logged user not found");
+                throw new EntityNotFoundException(nameof(ApplicationUser), request.LoggedInUserId.ToString());
+            }
+            var loggedRoles = await _userManager.GetRolesAsync(loggedUser);
+            var matchedRoles = new List<string>() {
+                Roles.Admin,
+                Roles.IT
+            };
+            if (!matchedRoles.Any(x => loggedRoles.Contains(x))) {
+                Log.Logger.Error($"GetUserProfileHandler: User not authorized");
+                throw new AuthorizationException();
+            }
+        }
+        var user = await _applicationUserRepository.GetById(request.UserId);
+        if (user == null) {
+            Log.Logger.Error($"GetUserProfileHandler: User not found");
+            throw new EntityNotFoundException(nameof(ApplicationUser), request.UserId.ToString());
+        }
+        var roles = await _userManager.GetRolesAsync(user);
+        return user.ToGql(roles);
     }
 }

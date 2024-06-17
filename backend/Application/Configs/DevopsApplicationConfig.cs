@@ -1,5 +1,3 @@
-namespace Application.Configs; 
+namespace Application.Configs;
 
-public class DevopsApplicationConfig: BaseConfig {
-    
-}
+public class DevopsApplicationConfig : BaseConfig { }

@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using System.Reflection;
-
 namespace Application.Queries;
 
 public static class QueryHelper {
@@ -14,6 +13,7 @@ public static class QueryHelper {
         return typeof(T).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance) != null;
     }
 
+
     public static IQueryable<T> OrderByProperty<T>(this IQueryable<T> source, string propertyName) {
         if (typeof(T).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance) == null) {
             return null;
@@ -23,7 +23,9 @@ public static class QueryHelper {
         Expression orderByProperty = Expression.Property(paramterExpression, propertyName);
         var lambda = Expression.Lambda(orderByProperty, paramterExpression);
         var genericMethod = OrderByMethod.MakeGenericMethod(typeof(T), orderByProperty.Type);
-        var ret = genericMethod.Invoke(null, new object[] { source, lambda });
+        var ret = genericMethod.Invoke(null, new object[] {
+            source, lambda
+        });
         return (IQueryable<T>)ret;
     }
 
@@ -36,7 +38,9 @@ public static class QueryHelper {
         Expression orderByProperty = Expression.Property(paramterExpression, propertyName);
         var lambda = Expression.Lambda(orderByProperty, paramterExpression);
         var genericMethod = OrderByDescendingMethod.MakeGenericMethod(typeof(T), orderByProperty.Type);
-        var ret = genericMethod.Invoke(null, new object[] { source, lambda });
+        var ret = genericMethod.Invoke(null, new object[] {
+            source, lambda
+        });
         return (IQueryable<T>)ret;
     }
 }

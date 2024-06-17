@@ -1,7 +1,7 @@
 namespace Application.Utils;
 
 public static class CorrelationContext {
-    private static readonly AsyncLocal<string> CorrelationId = new AsyncLocal<string>();
+    private static readonly AsyncLocal<string> CorrelationId = new();
 
     public static void SetCorrelationId(string correlationId) {
         if (string.IsNullOrWhiteSpace(correlationId)) {

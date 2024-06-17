@@ -12,7 +12,7 @@ public class TestJob : IJob {
         _scopeFactory = scopeFactory;
     }
     public Task Execute(IJobExecutionContext context) {
-        Log.Logger.Information($"TestJob: {DateTime.Now}, {_config.AzureServiceBusUri}");
+        Log.Logger.Information($"TestJob: {DateTime.Now}, {_config.RabbitMqHost}");
         // Code that sends a periodic email to the user (for example)
         // Note: This method must always return a value 
         // This is especially important for trigger listers watching job execution 

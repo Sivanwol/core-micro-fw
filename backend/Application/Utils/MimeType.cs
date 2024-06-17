@@ -2,7 +2,7 @@ using Application.Utils.Comparer;
 namespace Application.Utils;
 
 /// <summary>
-/// A mapping of file name extensions to the corresponding MIME-type.
+///     A mapping of file name extensions to the corresponding MIME-type.
 /// </summary>
 public static class MimeType {
     private static readonly Dictionary<string, string> MimeTypeDictionary;
@@ -1118,12 +1118,12 @@ public static class MimeType {
     }
 
     /// <summary>
-    /// Gets the MIME-type of the file based on the file extension.
+    ///     Gets the MIME-type of the file based on the file extension.
     /// </summary>
     /// <returns>The MIME-type.</returns>
     /// <param name="extention">The file name extention.</param>
     /// <exception cref="System.ArgumentNullException">
-    /// <paramref name="extention"/> is <c>null</c>.
+    ///     <paramref name="extention" /> is <c>null</c>.
     /// </exception>
     public static string GetMimeType(string extention) {
         if (extention == null) {
@@ -1134,7 +1134,7 @@ public static class MimeType {
             extention = extention.TrimStart('.');
         }
 
-        if (!MimeTypeDictionary.TryGetValue(extention, out string mimeType)) {
+        if (!MimeTypeDictionary.TryGetValue(extention, out var mimeType)) {
             mimeType = "application/octet-stream";
         }
 

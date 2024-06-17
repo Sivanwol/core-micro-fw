@@ -1,4 +1,4 @@
-using Infrastructure.Responses.Processor.Services.Countries;
+using Infrastructure.Responses.Controllers.Countries;
 using MediatR;
 namespace Infrastructure.Requests.Processor.Services.Countries;
 

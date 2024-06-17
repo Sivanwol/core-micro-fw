@@ -1,5 +1,5 @@
 using Domain.Persistence.Context;
-namespace Domain.Persistence.Repositories.Common; 
+namespace Domain.Persistence.Repositories.Common;
 
 public abstract class BaseRepository {
     protected readonly IDomainContext Context;
@@ -7,5 +7,4 @@ public abstract class BaseRepository {
         IDomainContext context) {
         Context = context;
     }
-    
 }

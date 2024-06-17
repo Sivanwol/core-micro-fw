@@ -1,21 +1,17 @@
 using Nest;
 using Serilog;
+namespace Application.Elasticsearch;
 
-namespace Application.Elasticsearch; 
-
-public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where T : ElasticBaseIndex
-{
+public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where T : ElasticBaseIndex {
     private readonly IElasticClient _elasticClient;
 
-    public abstract string IndexName { get; }
-
-    protected ElasticBaseRepository(IElasticClient elasticClient)
-    {
+    protected ElasticBaseRepository(IElasticClient elasticClient) {
         _elasticClient = elasticClient;
     }
 
-    public async Task<T> GetAsync(string id)
-    {
+    public abstract string IndexName { get; }
+
+    public async Task<T> GetAsync(string id) {
         var response = await _elasticClient.GetAsync(DocumentPath<T>.Id(id).Index(IndexName));
 
         if (response.IsValid)
@@ -25,8 +21,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return null;
     }
 
-    public async Task<T> GetAsync(IGetRequest request)
-    {
+    public async Task<T> GetAsync(IGetRequest request) {
         var response = await _elasticClient.GetAsync<T>(request);
 
         if (response.IsValid)
@@ -36,8 +31,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return null;
     }
 
-    public async Task<T> FindAsync(string id)
-    {
+    public async Task<T> FindAsync(string id) {
         var response = await _elasticClient.GetAsync(DocumentPath<T>.Id(id).Index(IndexName));
 
         if (!response.IsValid)
@@ -46,8 +40,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return response.Source;
     }
 
-    public async Task<T> FindAsync(IGetRequest request)
-    {
+    public async Task<T> FindAsync(IGetRequest request) {
         var response = await _elasticClient.GetAsync<T>(request);
 
         if (!response.IsValid)
@@ -56,8 +49,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return response.Source;
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync()
-    {
+    public async Task<IEnumerable<T>> GetAllAsync() {
         var search = new SearchDescriptor<T>(IndexName).MatchAll();
         var response = await _elasticClient.SearchAsync<T>(search);
 
@@ -67,15 +59,13 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return response.Hits.Select(hit => hit.Source).ToList();
     }
 
-    public async Task<IEnumerable<T>> GetManyAsync(IEnumerable<string> ids)
-    {
+    public async Task<IEnumerable<T>> GetManyAsync(IEnumerable<string> ids) {
         var response = await _elasticClient.GetManyAsync<T>(ids, IndexName);
 
         return response.Select(item => item.Source).ToList();
     }
 
-    public async Task<IEnumerable<T>> SearchAsync(Func<QueryContainerDescriptor<T>, QueryContainer> request)
-    {
+    public async Task<IEnumerable<T>> SearchAsync(Func<QueryContainerDescriptor<T>, QueryContainer> request) {
         var response = await _elasticClient.SearchAsync<T>(s =>
             s.Index(IndexName)
                 .Query(request));
@@ -87,8 +77,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
     }
 
     public async Task<ISearchResponse<T>> SearchAsync(Func<QueryContainerDescriptor<T>, QueryContainer> request,
-        Func<AggregationContainerDescriptor<T>, IAggregationContainer> aggregationsSelector)
-    {
+        Func<AggregationContainerDescriptor<T>, IAggregationContainer> aggregationsSelector) {
         var response = await _elasticClient.SearchAsync<T>(s =>
             s.Index(IndexName)
                 .Query(request)
@@ -100,8 +89,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return response;
     }
 
-    public async Task<IEnumerable<T>> SearchAsync(Func<SearchDescriptor<T>, ISearchRequest> selector)
-    {
+    public async Task<IEnumerable<T>> SearchAsync(Func<SearchDescriptor<T>, ISearchRequest> selector) {
         var list = new List<T>();
         var response = await _elasticClient.SearchAsync(selector);
 
@@ -111,12 +99,9 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return response.Hits.Select(hit => hit.Source).ToList();
     }
 
-    public async Task<bool> CreateIndexAsync()
-    {
-        if (!(await _elasticClient.Indices.ExistsAsync(IndexName)).Exists)
-        {
-            await _elasticClient.Indices.CreateAsync(IndexName, c =>
-            {
+    public async Task<bool> CreateIndexAsync() {
+        if (!(await _elasticClient.Indices.ExistsAsync(IndexName)).Exists) {
+            await _elasticClient.Indices.CreateAsync(IndexName, c => {
                 c.Map<T>(p => p.AutoMap());
                 return c;
             });
@@ -124,8 +109,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return true;
     }
 
-    public async Task<bool> InsertAsync(T model)
-    {
+    public async Task<bool> InsertAsync(T model) {
         var response = await _elasticClient.IndexAsync(model, descriptor => descriptor.Index(IndexName));
 
         if (!response.IsValid)
@@ -134,8 +118,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return true;
     }
 
-    public async Task<bool> InsertManyAsync(IList<T> tList)
-    {
+    public async Task<bool> InsertManyAsync(IList<T> tList) {
         await CreateIndexAsync();
         var response = await _elasticClient.IndexManyAsync(tList, IndexName);
 
@@ -146,8 +129,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return true;
     }
 
-    public async Task<bool> UpdateAsync(T model)
-    {
+    public async Task<bool> UpdateAsync(T model) {
         var response = await _elasticClient.UpdateAsync(DocumentPath<T>.Id(model.Id).Index(IndexName), p => p.Doc(model));
 
         if (!response.IsValid)
@@ -156,10 +138,8 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return true;
     }
 
-    public async Task<bool> UpdatePartAsync(T model, object partialEntity)
-    {
-        var request = new UpdateRequest<T, object>(IndexName, model.Id)
-        {
+    public async Task<bool> UpdatePartAsync(T model, object partialEntity) {
+        var request = new UpdateRequest<T, object>(IndexName, model.Id) {
             Doc = partialEntity
         };
         var response = await _elasticClient.UpdateAsync(request);
@@ -170,8 +150,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return true;
     }
 
-    public async Task<bool> DeleteByIdAsync(string id)
-    {
+    public async Task<bool> DeleteByIdAsync(string id) {
         var response = await _elasticClient.DeleteAsync(DocumentPath<T>.Id(id).Index(IndexName));
 
         if (!response.IsValid)
@@ -180,8 +159,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return true;
     }
 
-    public async Task<bool> DeleteByQueryAsync(Func<QueryContainerDescriptor<T>, QueryContainer> selector)
-    {
+    public async Task<bool> DeleteByQueryAsync(Func<QueryContainerDescriptor<T>, QueryContainer> selector) {
         var response = await _elasticClient.DeleteByQueryAsync<T>(q => q
             .Query(selector)
             .Index(IndexName)
@@ -193,8 +171,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return true;
     }
 
-    public async Task<long> GetTotalCountAsync()
-    {
+    public async Task<long> GetTotalCountAsync() {
         var search = new SearchDescriptor<T>(IndexName).MatchAll();
         var response = await _elasticClient.SearchAsync<T>(search);
 
@@ -204,8 +181,7 @@ public abstract class ElasticBaseRepository<T> : IElasticBaseRepository<T> where
         return response.Total;
     }
 
-    public async Task<bool> ExistAsync(string id)
-    {
+    public async Task<bool> ExistAsync(string id) {
         var response = await _elasticClient.DocumentExistsAsync(DocumentPath<T>.Id(id).Index(IndexName));
 
         if (!response.IsValid)

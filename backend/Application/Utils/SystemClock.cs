@@ -7,11 +7,13 @@ public static class SystemClock {
         _clock = clock;
     }
 
-    public static DateTimeOffset Now() {
+    public static DateTime Now() {
         return _clock.Now();
     }
 
     private class DefaultClock : IClock {
-        public DateTimeOffset Now() => new DateTimeOffset(DateTime.Now.ToUniversalTime());
+        public DateTime Now() {
+            return DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc);
+        }
     }
 }

@@ -16,11 +16,11 @@ public static class SwaggerExtension {
     public static void AddSwaggerExtension(this IServiceCollection services, BackendRealtimeApplicationConfig configuration, string applicationTitle) {
         AddSwaggerGenSupport(services, $"v{configuration.APIMajorVersion}", applicationTitle);
     }
-    private static void AddSwaggerGenSupport(this IServiceCollection services, string version ,string applicationTitle) {
+    private static void AddSwaggerGenSupport(this IServiceCollection services, string version, string applicationTitle) {
         services.AddSwaggerGen(c => {
             c.IgnoreObsoleteActions();
             c.EnableAnnotations();
-            c.SwaggerDoc(version, new() {
+            c.SwaggerDoc(version, new OpenApiInfo {
                 Title = applicationTitle,
                 Version = version,
                 Description = "This is the API documentation for the application",

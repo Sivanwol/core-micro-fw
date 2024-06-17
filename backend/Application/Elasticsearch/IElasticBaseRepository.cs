@@ -1,5 +1,4 @@
 using Nest;
-
 namespace Application.Elasticsearch;
 
 public interface IElasticBaseRepository<T> where T : class {
